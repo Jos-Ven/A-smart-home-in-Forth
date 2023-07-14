@@ -954,6 +954,39 @@ defer udp-requests  ( adr len --)
 
 0 value Tid-Udp-server
 
+: fsearch   ( c-addr1 u1 c-addr2 u2 c-filename3 u3 -- u4 flag )
+   2dup file-status 0= \  u4 = characters remaining in the file
+      if    drop r/w map-file
+            2dup 2>r 2swap search 2r> unmap-file rot drop
+      else  2drop 2drop drop 0 false
+      then ;
+
+: TmpDir ( - adr_counted$ )
+   s" /tmp" file-status nip 0>=
+     if    s" /tmp/" pad place
+     else  0 pad !
+     then  pad count ;
+
+: Add/Tmp/Dir ( &filename cnt - &/tmp/filename cnt )
+   TmpDir pad place +pad" ;
+
+: start-servers ( - )
+   tcp/ip seal
+     [DEFINED] DisableUpdServer [IF]
+     [ELSE]    ['] Udp-server execute-task to Tid-Udp-server \ Start the udp server
+     [THEN]
+   s" yes" s" background.log"  Add/Tmp/Dir  fsearch nip      \ See also gf.sh for background operations
+      if   s" background.log"  Add/Tmp/Dir r/w  open-file throw
+           dup s" Done! " rot write-file throw
+           close-file drop
+           ['] noop IS dobacktrace
+     then
+   start-web-server 200 ms
+   PingTcpServers
+   [ [DEFINED] LockConsole ]    [IF] LockConsole ." console NOT locked"  [THEN]
+ ;
+
+
 [THEN]
 
 0 value #received \  for stats.

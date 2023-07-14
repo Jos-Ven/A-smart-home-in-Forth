@@ -87,10 +87,10 @@ start-servers \quit \ Start the webserver in a task in the background and stop c
 
 [THEN]
 
-
+cr order
 S" gforth" ENVIRONMENT? [IF] 2drop
 cr  .( Starting the webserver. )
-Start-http-server
+start-servers
 [THEN]
 \s
 

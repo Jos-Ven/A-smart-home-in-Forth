@@ -475,15 +475,6 @@ $e7e7e7 constant ButtonWhite
    <yellow-page IncludeFile
    yellow-page> ;
 
-: TmpDir ( - adr_counted$ )
-   s" /tmp" file-status nip 0>=
-     if    s" /tmp/" pad place
-     else  0 pad !
-     then  pad count ;
-
-: Add/Tmp/Dir ( &filename cnt - &/tmp/filename cnt )
-   TmpDir pad place +pad" ;
-
 : DecodeHtmlChar { adr --  char #UsedInput } \ limited version
   adr c@
       case
