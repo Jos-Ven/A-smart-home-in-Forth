@@ -416,6 +416,7 @@ TCP/IP DEFINITIONS \ Adding the requestrs to the tcp/ip dictionary
 : arpnew			( - ) MsgGfSlavesRebuildArpTable  Ignore-remainder ;
 
 
-FORTH DEFINITIONS  PREVIOUS ORDER
+FORTH DEFINITIONS
+
 
 \s

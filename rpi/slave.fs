@@ -9,6 +9,7 @@ needs LoadAvg.fs
 needs chains.fs
 needs autogen_ip_table.fs  \ Set parameters first at the start of autogen_ip_table.fs
 
+
 variable exit-chain
 defer KillTasks    ' noop is KillTasks
 ' KillTasks exit-chain chained
@@ -210,7 +211,7 @@ defer SosLayout
 
 false value RebuildArpTable- \ see also schedule_daily.fs
 
-also tcp/ip definitions
+tcp/ip definitions
 
 : Ignore-remainder ( - ) postpone \ ;
 
@@ -250,14 +251,8 @@ also tcp/ip definitions
 :  Gforth_UpdateSignal  ( - )   UpdateThisSystem ;  \ Update this client from Forth through sock.
 
 
-forth definitions previous also tcp/ip
+FORTH DEFINITIONS PREVIOUS
 
-
-previous
-
-
-\ timedatectl | grep synchronized
-\ NTP synchronized: yes
 
 : NtpActive? ( - flag )
    s" timedatectl | grep synchronized" ShGet s"  yes" search nip nip ;
@@ -282,7 +277,7 @@ defined Master.fs not [if]
 ' TimeCheck init-webserver-gforth-chain chained
 
 [else] ' restart-ntp-service is sync-time
-[then] 
+[then]
 
 SentNewArp
 

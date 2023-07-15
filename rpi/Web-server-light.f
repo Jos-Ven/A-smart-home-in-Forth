@@ -290,7 +290,7 @@ cell newuser depth-target
     +html| <br> For web page: |
     xt-htmlpage @ dup 0<>
        if    name>string +html
-       else  drop +html| xt-htmlpage not set! |
+       else  drop +html| Na |
        then
     +html| </font></body></html>|  ;
 
@@ -357,8 +357,8 @@ cell newuser ms_req
    evaluating_tcp/ip
    htmlpage$ lcount aSock @ send-html-page ;
 
-   ' see-request is handle-request       \ To see errors only
-\  ' (handle-request) is handle-request  \ To see the complete received request
+\  ' see-request is handle-request       \ To see errors only
+   ' (handle-request) is handle-request  \ To see the complete received request
 
 \ ----
 

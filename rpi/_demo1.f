@@ -69,8 +69,9 @@ forth definitions previous previous
 [then]
 
 
-\ ' see-request is handle-request \ To see the complete received request
-  ' (handle-request) is handle-request
+\ ' (handle-request) is handle-request  \ Default
+\ ' see-request is handle-request       \ To see the complete received request
+
 
 \ ---- Starting the application in the webserver ------------------------------------------------
 

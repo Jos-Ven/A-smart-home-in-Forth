@@ -10,10 +10,10 @@ Marker SetVersionPage.fs
       <td>  s" Cancel"       s" VersionCancel"  <CssButton> </td>  <td> .HtmlSpace </td>
   </tr> ;
 
-ALSO TCP/IP DEFINITIONS
+TCP/IP DEFINITIONS
 
 : AdminSetVersion ( Major-vs Minor-vs - ) swap  1000000 * + SetVersionFile ;
 
-FORTH DEFINITIONS  PREVIOUS ORDER
+FORTH DEFINITIONS  PREVIOUS
 
 \s
