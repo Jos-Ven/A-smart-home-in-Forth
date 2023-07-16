@@ -14,7 +14,7 @@ also html
 : LogToday ( - )
     s" *** " pad place (date) +pad  s"  *** " +pad" +log ;
 
-: Good-morning ( - )
+: Good-morning ( - )    \ Appears in the logging.
     log" Good morning " LogToday  &last-line-packet$ count write-log-line
     FreeMem" write-log-line  ;
 
@@ -34,7 +34,7 @@ also html
 here dup to &options-table \ Options used by run-schedule
 \                        Map: xt      cnt adr-string
 ' Good-morning            dup , >name$ , , \ Executed when the schedule is empty
-' Reset-logging-saturday  dup , >name$ , ,
+' Reset-logging-saturday  dup , >name$ , , \ Good-morning apears in the logging: Web activity 
 ' Rebuild-arptable        dup , >name$ , ,
 ' Reset-webserver_27th    dup , >name$ , ,
 

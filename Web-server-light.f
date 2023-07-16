@@ -279,7 +279,8 @@ cell newuser depth-target
 
 : .catch-error ( adr len errcode - ) \ The line after the separators are removed.
    >r cr ." ******* Request aborted! ******* "
-\in-system-ok  cr ." Order: " order    \ Words must be defined in the TCP/IP dictionary !
+\in-system-ok  cr .date bl emit .time
+    ."  Order: " order \ Words of requests must be in TCP/IP dictionary !
     cr ." Error at: " 2dup  type
     r> warnmsg
     StartHeader             \ Put the error on the html-page
@@ -743,9 +744,10 @@ DROP
 
 
 : start-servers ( - )
+  cr ." The context is TCP/IP only !  +f will get Forth again."
   \in-system-ok also tcp/ip
   ['] Start-web-server Submit: webserver-tasks
-\in-system-ok seal order ;
+  \in-system-ok seal order ;
 
 TCP/IP DEFINITIONS
 
@@ -971,6 +973,7 @@ defer udp-requests  ( adr len --)
    TmpDir pad place +pad" ;
 
 : start-servers ( - )
+   cr ." The context is TCP/IP only !  +f will get Forth again."
    tcp/ip seal
      [DEFINED] DisableUpdServer [IF]
      [ELSE]    ['] Udp-server execute-task to Tid-Udp-server \ Start the udp server
