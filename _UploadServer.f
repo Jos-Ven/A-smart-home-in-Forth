@@ -1,12 +1,10 @@
 needs Common-extensions.f \ See domotica_vX.zip at http://home.kpn.nl/~josv on the smart home page
-cr marker _UploadServer.f  bl emit .latest .(  04-06-2023 )      \ by J.v.d.Ven. To Load the UdpSender.f
+cr marker _UploadServer.f  bl emit .latest .(  17-07-2023 )      \ by J.v.d.Ven.
 
 0 [IF]
-
+This makes it possible to upload sources to the file system of an ESP32 or ESP12F.
 For Installation, notes and known issues see:
-Installation_upload_server.rtf
-
-The source was converted and extended from a previous flasher; most words are still there.
+Installation_upload_server.pdf
 
 [THEN]
 

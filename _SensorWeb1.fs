@@ -1,9 +1,9 @@
 needs Common-extensions.f  cr \ Basic tools for Gforth and Win32Forth.
-marker _SensorWeb1.fs .latest \ The loader for the webserver. By J.v.d.Ven. 7-11-2012
+marker _SensorWeb1.fs .latest \ To support extra sensors. By J.v.d.Ven. 17-07-2023
                               \ It needs Gforth on a Raspberry Pi with linux (Jessie or Bullseye)
                               \ Enable the interfaces I2c and Spi with: sudo raspi-config
 
-.(  Extra options that can be activated by deleting the backslash before the marker:)
+cr .(  Extra options that can be activated by deleting the backslash before the marker:)
 \ The following lines are used as optional flags.
 \ MARKER AdminPage      .latest \ For a link to the AdministrationPage
 \ MARKER Bme280Outside  .latest \ Changes the abstract if the bme280 is placed outside
@@ -813,7 +813,7 @@ create Floor-data 80 allot
 
 coded char - negate + dup    value Prev-Temperature   value Prev-Humidity
 
-  12 constant MsgBoard                 \ Server number of the MsgBoard  
+  12 constant MsgBoard                 \ Server number of the MsgBoard
 2.0e fvalue   HumidityDecreaseLim      \ Humidity (%)
   15 value    HumidityDecreaseTimeSpan \ Minimal 1 minute
   15 value    HumidityIncreaseTimeSpan \ Minimal 15 minutes

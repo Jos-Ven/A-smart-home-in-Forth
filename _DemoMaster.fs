@@ -1,7 +1,7 @@
 Needs  Master.fs \ Will also load all the Web-server-light and autogen_ip_table.fs 16-07-2023
                  \ Change Max#servers first at the start of autogen_ip_table.fs !
 
-Marker _DemoMaster.fs .latest \ A demo that uses webcontrols.f 1 page only the shutdown button works.
+Marker _DemoMaster.fs .latest \ A demo that uses webcontrols.f
 needs  gpio.fs                \ To control and administer GPio pins
 
 \ ---- Assigning GPio pins ----------------------------------------------------------------------
@@ -9,8 +9,8 @@ needs  gpio.fs                \ To control and administer GPio pins
 0 \ 1st device in the table. The following GpioPin(s) are used:
 \ GPIOpin#   Name     Resistor         Input OR Output
   24 GpioPin: Light_1  AsPinOutput
- cr dup . .( Gpio pin[s] used.) to #pins \ Lock table and save the actual number of used pins
- InitPins .pins cr                       \ Start and list the used GPio pins.
+  cr dup . .( Gpio pin[s] used.) to #pins \ Lock table and save the actual number of used pins
+  InitPins .pins cr                       \ Start and list the used GPio pins.
 
 \ ---- The HTML-page for the application --------------------------------------------------------
 
@@ -38,8 +38,7 @@ ALSO HTML
     s" Light switch" NearWhite 0 <HtmlLayout> \ Starts a table in a htmlpage with a legend
     <td> .Buttons
          &last-html-cmd count  +</td>         \ Feedback of the last given command
-    <tr><td>  +HTML| Settings: | AdminLink .HtmlSpace
-              <aHREF" +homelink  +HTML| /Schedule">| +HTML| Schedule| </a>   </td></tr>
+    <tr><td> AdminLink </td></tr>
     <tr><td>  HTML| Loggings: | +HtmlNoWrap LogLinks  </td></tr> \ Optional to see the links to the log-page
     <tr><td>  +Arplink s" /UpdateLinks" SiteLinks </td></tr>
 
@@ -48,26 +47,11 @@ ALSO HTML
 
 PREVIOUS
 \ Responses to the various buttons:
-: switch-off    ( - )   \ Put the light off
+: WhenOn    ( - )   \ Put the light off
    Light_1 -off s" Switch off" place-last-html-cmd SwitchPage ;
 
-: switch-on    ( -  )  \ Put the light on
+: WhenOff    ( -  )  \ Put the light on
    Light_1 -on  s" Switch on" place-last-html-cmd SwitchPage ;
-
-: shutdown-webserver ( - ) down ;
-
-here dup to &options-table \ Options used by run-schedule
-\                        Map: xt      cnt adr-string
-' Good-morning            dup , >name$ , , \ Executed when the schedule is empty
-' Reset-logging-saturday  dup , >name$ , ,
-' Rebuild-arptable        dup , >name$ , ,
-' reboot                  dup , >name$ , ,
-' Reset-webserver_27th    dup , >name$ , ,
-' shutdown-webserver      dup , >name$ , ,
-' switch-off              dup , >name$ , ,
-' switch-on               dup , >name$ , ,
-
-here swap - /option-record / to #option-records \ Pointing to the new option list
 
 \ ---- Controlling the application --------------------------------------------------------------
 
@@ -76,8 +60,7 @@ TCP/IP DEFINITIONS   \ Adding words in the tcp/ip dictionary for the GUI.
 : /home  ( - )       \ Must be executed AFTER all other controls have been executed
          ['] SwitchPage set-page ;
 
-: Switch (  On|Off - )   if  switch-off  else  switch-on  then ;
-
+: Switch (  On|Off - )   if  WhenOn  else  WhenOff  then ;
 
 forth definitions
 
