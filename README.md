@@ -12,7 +12,7 @@ The aims for the web-server-light_v50 are:
 3. Keep all data local.
 
 The Web-server-light runs best under Linux on a Raspberry Zero W.
-A PC with Linux (Bookworm) or with Windows10/11 can also be used.
+A PC with Linux (Bookworm) or PC with Windows10/11 can also be used.
 
 Read the Installation guide for the details.
 See the screenshots for an impression.
