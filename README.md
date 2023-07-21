@@ -16,5 +16,5 @@ A PC with Linux (Bookworm) or PC with Windows10/11 can also be used.
 
 Read the Installation guide for the details.
 Here is how it may look:
-![01_ScreenShot 1](https://github.com/Jos-Ven/A-smart-home-in-Forth/assets/47664564/f66ed791-a241-4c01-9585-cb0315705175)
+![alt tag](https://github.com/Jos-Ven/A-smart-home-in-Forth/assets/47664564/f66ed791-a241-4c01-9585-cb0315705175)
 
