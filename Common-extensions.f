@@ -1,4 +1,4 @@
-Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 16-04-2023
+Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 31-07-2023
 
 : CloseFile ( fid - ) dup flush-file drop close-file drop ;
 
@@ -18,7 +18,7 @@ needs unix/mmap.fs
 : between    ( n lo hi - flag )     1+ within ;
 : word-join  ( high low - lowhigh ) 16 lshift or ;
 : word-split ( lowhigh - high low ) dup $FFFF and swap 16 rshift ;
-: newuser    ( size <name> -- )     ['] sp0 create-from reveal uallot , ;
+: newuser    ( size <name> -- )     aligned ['] sp0 create-from reveal uallot , ;
 : newfuser   ( <name> -- )                      \ Avoids error: Address alignment exception
    udp @ dup faligned swap - uallot drop float newuser ;
 
@@ -35,6 +35,7 @@ needs unix/mmap.fs
 ' name>string alias >name$
 
 255 constant maxcounted
+maxcounted 1+ newuser upad    \ needs to be multi user from this point
 create spcs  maxcounted allot
 spcs         maxcounted blank
 synonym      cls        page
@@ -53,9 +54,10 @@ maxcounted 1+ newuser log-line$
 : space"  ( -- adr cnt )                s"  " ;
 : dot"    ( -- adr cnt )                s" ." ;
 : .dot    ( -- )                    dot" type ;
-: pad"    ( - pad count )          pad count  ;
-: +pad    ( adr cnt -- )           pad +place ;
-: +pad"   ( adr cnt --  adr2 cnt2 ) +pad pad" ;
+: upad"   ( - upad count )         upad count ;
+: +upad   ( adr cnt -- )          upad +place ;
+: +upad"  ( adr cnt --  adr2 cnt2 ) +upad upad" ;
+
 : +blank" ( adr cnt --  adr cnt2 )  utmp$ place  space" +utmp$  utmp" ;
 
 : ##$     ( seperator n -- adr cnt )
@@ -108,11 +110,11 @@ maxcounted 1+ newuser log-line$
    3drop 3drop ;
 
 \ string concatenation:  $1 + $2 -> $1+$2 in pad
-: $concat ( $1 n $2 n - pad n1+2 )
+: $concat ( $1 n $2 n - upad n1+2 )
     utmp$ place             \ Save old $2.
-    pad   place             \ Put $1 in place.
-    utmp" +pad              \ Add old $2.
-    pad" ;
+    upad   place             \ Put $1 in place.
+    utmp" +upad              \ Add old $2.
+    upad"  ;
 
 : format-logline ( adr cnt -  'adr cnt_total )
     (time) log-line$ place space"
@@ -129,9 +131,9 @@ S" gforth" ENVIRONMENT? [IF] 2drop
 : +log  ( adr cnt -  )  format-logline (+log   ;
 
 : def-logged ( latest adr cnt -  )
-    s" - " pad place
-    rot name>string +pad  s"  - " +pad +pad
-     pad count format-logline (+log ;
+    s" - " upad place
+    rot name>string +upad  s"  - " +upad +upad
+     upad count format-logline (+log ;
 
 : last-lit, ( - ) latest postpone lit ,  ;
 
@@ -152,7 +154,7 @@ User sh$  cell uallot drop
 
 : Wall ( msg$ count - ) \ Puts a msg on the terminal, even if it running in the background
    s" echo '\a'" 2swap $concat 2drop
-   s" | sudo wall -n "  +pad  pad" system ;
+   s" | sudo wall -n "  +upad  upad"  system ;
 
 \ Checking some used interfaces:
 : CheckSPI    ( - f )  s" lsmod | grep spi_" ShGet nip 0<> ;
@@ -185,7 +187,7 @@ User sh$  cell uallot drop
 
 create crlf$  2 c, 13 c, 10 c,
 
-: $>s     ( adr cnt -- n )   pad place pad number d>s ;
+: $>s     ( adr cnt -- n )   upad place upad number d>s ;
 : 0max    ( n -- 0max )      0 max ;
 : down    ( -- )             s" sudo shutdown 0 -h " ShGet #0. sh$ 2! bye ;
 : reboot  ( -- )             s" sudo shutdown 0 -r " ShGet #0. sh$ 2! bye ;
@@ -236,7 +238,7 @@ pthread-id constant pthread-id0 \ id of task 0
 defer close-http-server ' noop is close-http-server
 
 : system2 ( cmd2$ cnt cmd1$ cnt - ) \ Note: words with system are expensive
-  pad place space" +pad +pad" system ;
+  upad place space" +upad +upad" system ;
 
 : CpuLed ( ledcmd$ cnt - ) \ Led0
   s" | sudo tee /sys/class/leds/led0/brightness > /dev/null" 2swap system2 ;
@@ -271,7 +273,7 @@ s" /sys/class/leds/led1/brightness" file-status nip \ led1 does not exist on a R
 : GetFreeMem  ( - mem )  GetFreeMem" s>number? drop d>s ;
 
 : FreeMem" ( - adr cnt )
-    s" Free mem: " GetFreeMem" $concat 2drop s"  MB" +pad  pad" ;
+    s" Free mem: " GetFreeMem" $concat 2drop s"  MB" +upad  upad"  ;
 
 
 \ : drop_caches ( - )   \  Use  drop_caches.sh
@@ -334,8 +336,8 @@ Needs security.f
 : >name$      ( cfa - adr n )    >name count ;
 
 : def-logged ( latest adr cnt -  )
-      s" - " pad place
-      rot name>string +pad  s"  - " +pad +pad"
+      s" - " upad place
+      rot name>string +upad  s"  - " +upad +upad"
       ['] (+log LogSlot
       ;
 
@@ -409,12 +411,12 @@ synonym pause     winpause
               then
        loop  ;
 
-: $find   ( str cnt -- str 0 | cfa flag )  pad place pad find ;
+: $find   ( str cnt -- str 0 | cfa flag )  upad place upad find ;
 
 : s>float ( adr cnt - flag ) ( - f )       bl scan- >float ;
 
 : (u.r)  ( u w -- adr cnt )
-    0 swap >r (d.) r> over - spaces$ pad place +pad"  ;
+    0 swap >r (d.) r> over - spaces$ upad place +upad"  ;
 
 : f>dint ( f: n magn - ) ( d: - n )  f* fround f>d tuck dabs ;
 : .#-> [char] . hold  #s rot sign #>  ;

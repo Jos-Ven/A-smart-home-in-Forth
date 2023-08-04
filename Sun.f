@@ -227,7 +227,7 @@ true constant setting
    00 00 00 date-now UtcTics-from-Time&Date f- ;
 
 : #NsTill  ( hhmmTargetLocal -- ) ( F: -- NanosecondsUtc )
-  UtcTics-from-hm  @time f2dup f<
+  UtcTics-from-hm  @time LocalTics-from-UtcTics f2dup f<
       if   fswap #SecondsToDay f+ fswap \ Next day when the time has past today
       then
    f- Nanoseconds  f* ;
@@ -238,13 +238,13 @@ true constant setting
      loop
    #NsTill f>d ns ;
 
-: wait-time-sun ( f: LocalTics -- LocalTimeDif ) ( - flag  )  @time till-next-time ;
+: wait-time-sun ( f: UtcTics -- UtcTicsTimeDif ) ( - flag  )  @time till-next-time ;
 
 : sunset-still-today?  ( - minutes flag )
    date-now sunset LocalTics-from-UtcTics wait-time-sun not f>s 60 / swap ;
 
 : .wait-time-sun ( f: UtcTics -- flag )
-   LocalTics-from-UtcTics fdup  wait-time-sun
+   fdup  wait-time-sun
      if    fdrop ."  was done at " .ftime
      else  fswap ."  is expected at "  .ftime
            ." . Wait time: " .fdays&time

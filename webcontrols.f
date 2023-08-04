@@ -360,7 +360,7 @@ $e7e7e7 constant ButtonWhite
 : <EmptyLine>      ( - ) <br> .HtmlSpace <br> ;
 
 : (u.r)Html  ( u w -- adr cnt )
-    0 swap >r (d.) r> over - 0 max .HtmlZeros  pad place pad" ;
+    0 swap >r (d.) r> over - 0 max .HtmlZeros  upad place upad"  ;
 
 : 4w.intHtml   ( n - )       4 (u.r)Html +html ;
 : f.2HtmlCell  ( F: f - )    <tdR> (f.2) +html </td> ;
@@ -451,15 +451,15 @@ $e7e7e7 constant ButtonWhite
 3000 constant //HtmlPage-layout-reserved
 /HtmlPage //HtmlPage-layout-reserved - constant //HtmlPage
 
-: LoadDataFile ( At$ hndl - )                     \ Load a complete file when it fits OR
-     dup>r file-size throw d>s //HtmlPage - 255 - \ only the last part when it does not fit
-     0 max dup 0>
-        if  s>d r@ reposition-file throw
-            pad maxcounted r@ read-line throw 2drop
-        else drop
+: LoadDataFile ( At$ hndl - )                      \ Load a complete file when it fits OR
+   dup>r file-size throw d>s  //HtmlPage  2024 - 2dup > \ only the last part when it does not fit
+        if     - s>d r@ reposition-file throw
+              upad maxcounted r@ read-line throw 2drop
+        else  2drop
         then
-     //HtmlPage  r@ read-file throw
-     r> close-file throw  htmlpage$ +! ;
+   //HtmlPage  r@ read-file throw
+   r> close-file throw  htmlpage$ +! ;
+
 
 : IncludeFile ( title$ cnt filename cnt - )
    r/o bin open-file throw >r
@@ -479,8 +479,8 @@ $e7e7e7 constant ButtonWhite
   adr c@
       case
         [char] +  of  bl 1 endof
-        [char] %  of  adr  1+ c@ pad c!   adr 2 + c@ pad 1+ c!
-                      pad 2 base @ >r hex s>number?
+        [char] %  of  adr  1+ c@ upad c!   adr 2 + c@ upad 1+ c!
+                      upad 2 base @ >r hex s>number?
                          if    d>s 3
                          else  2drop bl 1
                          then r> base ! endof
@@ -526,10 +526,10 @@ $e7e7e7 constant ButtonWhite
    +HTML| </style> | ;
 
 : +AppVersion ( Version -  MayorVs.MinorVS$ cnt )
-     0 pad ! dup 0<
-        if   s" -" +pad abs
+     0 upad ! dup 0<
+        if   s" -" +upad abs
         then
-     SplitVersion (.) +pad  dot" +pad (.) +pad" ;
+     SplitVersion (.) +upad  dot" +upad (.) +upad" ;
 
 : 3tables { legendtxt$ cnt bgcolor Border -- }
    +HTML| <body bgcolor=| bgcolor "#h." +html >| <form> <center>

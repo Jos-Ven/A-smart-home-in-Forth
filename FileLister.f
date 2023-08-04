@@ -19,8 +19,8 @@ init-FileList-table
 
 : AddFilename ( adr cnt - )
    1 +to fcounter
-   pad &FileList-table >record-size @ 1+ bl fill   s" N" pad place    pad +place crlf" pad +place
-   pad 1+ &FileList-table >record-size @ hFilenames write-file  drop ;
+   upad &FileList-table >record-size @ 1+ bl fill   s" N" upad place    upad +place crlf" upad +place
+   upad 1+ &FileList-table >record-size @ hFilenames write-file  drop ;
 
 
 s" gforth" ENVIRONMENT? [IF] 2drop
@@ -46,7 +46,7 @@ s" Documents/MachineSettings.fs" file-status nip 0= [if]
             THEN  REPEAT
    drop buf $free  handle close-dir throw ;
 
-\  pad $300 get-dir s" *.f*" ' .file-name  cr traverse-matched-dir2
+\  upad $300 get-dir s" *.f*" ' .file-name  cr traverse-matched-dir2
 
 
 : write-sorted-list
@@ -65,9 +65,9 @@ s" Documents/MachineSettings.fs" file-status nip 0= [if]
 
 : MapFileNames   ( file$ cnt - vadr size )
    2dup r/w open-file drop   dup>r file-size drop d>s 0=
-     if  pad &FileList-table >record-size @ 1+ bl fill
-         s"  None " pad place
-         pad 1+ &FileList-table >record-size @ r@ write-file drop
+     if  upad &FileList-table >record-size @ 1+ bl fill
+         s"  None " upad place
+         upad 1+ &FileList-table >record-size @ r@ write-file drop
      then
    r> close-file drop
    r/w map-file 2dup Fhndl 2!  ;
@@ -85,16 +85,16 @@ s" Documents/MachineSettings.fs" file-status nip 0= [if]
    UnMapFileNames ;
 
 : AddNone ( hndl - )
-         pad  &FileList-table >record-size @ bl fill
-         s"  None" pad place crlf$ count pad +place
-         pad &FileList-table >record-size @
+         upad  &FileList-table >record-size @ bl fill
+         s"  None" upad place crlf$ count upad +place
+         upad &FileList-table >record-size @
          rot write-file drop ;
 
 : ListFiles  ( filter$ cnt - )
    0 to fcounter
    2>r s" ForthFileListUnsorted.tmp" 2dup r/w create-file
        if    drop cr ." Can't create file list for " 2r> type  ." files."
-       else  to hFilenames pad 300 get-dir   2r>
+       else  to hFilenames upad 300 get-dir   2r>
              ['] AddFilename traverse-matched-dir-files
        then
    fcounter 0=

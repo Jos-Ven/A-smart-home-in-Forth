@@ -71,8 +71,8 @@ DefaultForPins
      loop ;
 
 : LogSwPin ( n flag - n flag )
-  s" SwPin " pad place over (.) +pad
-  space" +pad dup (.) +pad" +log ;
+  s" SwPin " upad place over (.) +upad
+  space" +upad dup (.) +upad" +log ;
 
 : SwPin ( n flag  - )
     dup

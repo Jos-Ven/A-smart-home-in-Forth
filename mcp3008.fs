@@ -19,9 +19,9 @@ needs wiringPi.fs \ From: https://github.com/kristopherjohnson/wiringPi_gforth/b
 : initSpi     ( - )           spiMcp3008 spiSpeed spiSetup to fdSpi ;
 
 : Adc@ ( spiChannel ADcChannel - RawData )
-   pad off   1 pad c!   CHAN_CONFIG_SINGLE or 4 lshift pad 1+ c!
-   pad 3 wiringPiSPIDataRW ?ior
-   pad 1+ c@ 3 and 8 lshift   pad 2 + c@ or ;
+   upad off   1 upad c!   CHAN_CONFIG_SINGLE or 4 lshift upad 1+ c!
+   upad 3 wiringPiSPIDataRW ?ior
+   upad 1+ c@ 3 and 8 lshift   upad 2 + c@ or ;
 
 : Adc% ( RawData - %OfTotal ) s>f (Adc%) f/ ;
 

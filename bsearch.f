@@ -24,18 +24,18 @@
 
 : bsearch-numbers ( &data #elements target bs-record-size - &result )
   bs-record-size !     >r ['] bs-number -rot bs-record-size @ * r>
-  2 pick @  max  pad !  pad  bsearch ;
+  2 pick @  max  upad !  upad  bsearch ;
 
 : bsearch-doubles ( &data #elements Dtarget bs-record-size - &result )
   bs-record-size !  2>r ['] bs-doubles -rot bs-record-size @ * 2r>
-  3 pick 2@ dmax pad 2! pad  bsearch ;
+  3 pick 2@ dmax upad 2! upad  bsearch ;
 
 : bsearch-strings ( &data #elements target$ count bs-record-size - &result )
   bs-record-size !
   2dup 2>r 3 pick bs-record-size @ compare 0<
     if    2r> 2drop drop
     else  ['] bs-strings -rot bs-record-size @ *  2r>
-          pad place pad bsearch
+          upad place upad bsearch
     then ;
 
 

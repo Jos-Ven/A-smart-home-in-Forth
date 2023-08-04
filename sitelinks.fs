@@ -8,15 +8,15 @@ marker sitelinks.fs \ To link other Forth servers to a home page
 : Tophref="     ( - )  (Tophref) +html ;
 
 : <pagelink ( page$ cnt #server - adr cnt )
-    >r s" http://" pad place
-   r@ r>ipAdress count +pad  s" :" +pad
-   r> r>port @ (.) +pad
-   +pad pad +quote  s" >" +pad pad count ;
+    >r s" http://" upad place
+   r@ r>ipAdress count +upad  s" :" +upad
+   r> r>port @ (.) +upad
+   +upad upad +quote  s" >" +upad upad count ;
 
 : pagelink> ( link-text cnt - )   +HTML </a>2sp ;
 
 : Sitelink ( #server - )
-   pad off Tophref="  >r  s" /home" r@ <pagelink +HTML
+   upad off Tophref="  >r  s" /home" r@ <pagelink +HTML
    r> r>HostName count  pagelink> ;
 
 : +Arplink ( - )
@@ -45,12 +45,12 @@ previous
 
 : (SitesIndex) ( - )
     s" /SitesIndex" #IndexSite <pagelink here place
-   (Tophref) pad place here count +pad
-    s" <strong>Index</strong>" +pad   s" </a> " +pad pad count +html  ;
+   (Tophref) upad place here count +upad
+    s" <strong>Index</strong>" +upad   s" </a> " +upad upad count +html  ;
 
 ' noop is SitesIndex           \ Default is off
 [defined] SitesIndexOpt                    \ When SitesIndexOpt
-  [IF] ' (SitesIndex) is SitesIndex 
+  [IF] ' (SitesIndex) is SitesIndex
   [THEN] \ make the index link visible
 
 

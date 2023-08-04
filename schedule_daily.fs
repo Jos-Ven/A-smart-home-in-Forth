@@ -12,9 +12,9 @@ also html
 27 value RestartServerDay   \ On the 27th
 
 : LogToday ( - )
-    s" *** " pad place (date) +pad  s"  *** " +pad" +log ;
+    s" *** " upad place (date) +upad  s"  *** " +upad" +log ;
 
-: Good-morning ( - )    \ Appears in the logging.
+: Good-morning ( - )
     log" Good morning " LogToday  &last-line-packet$ count write-log-line
     FreeMem" write-log-line  ;
 
@@ -34,7 +34,7 @@ also html
 here dup to &options-table \ Options used by run-schedule
 \                        Map: xt      cnt adr-string
 ' Good-morning            dup , >name$ , , \ Executed when the schedule is empty
-' Reset-logging-saturday  dup , >name$ , , \ Good-morning apears in the logging: Web activity 
+' Reset-logging-saturday  dup , >name$ , ,
 ' Rebuild-arptable        dup , >name$ , ,
 ' Reset-webserver_27th    dup , >name$ , ,
 

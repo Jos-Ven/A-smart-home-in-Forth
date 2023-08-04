@@ -111,8 +111,8 @@ s" iwconfig| grep dBm" ShGet nip
 
 : LightUnit"  ( -- adr count )
    [DEFINED] WiFiBitSignal
-   [IF]    s" WiFi&nbsp;Signal&nbsp;level&nbsp;(" pad place
-           signalUnit$ count +pad s" )" +pad pad count
+   [IF]    s" WiFi&nbsp;Signal&nbsp;level&nbsp;(" upad place
+           signalUnit$ count +upad s" )" +upad upad count
    [ELSE]  s" Light&nbsp;(%):"
    [THEN]  ;
 
@@ -546,7 +546,7 @@ coded char - negate + dup 1 3  >floorItem ! 1 4  >floorItem !
    Black to color-x-labels
    4 to DataLineWidth ;
 
-: TimeHdr ( - adr count )   (time) pad place space" +pad" ;
+: TimeHdr ( - adr count )   (time) upad place space" +upad" ;
 
 : JavaPartLink ( - )
    +HTML| <meta http-equiv="Content-Type" |

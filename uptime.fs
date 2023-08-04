@@ -8,9 +8,9 @@ marker uptime.fs    \ To get the uptime of the system
 
 : GetUptime ( - UptimeInSeconds )
    s" /proc/uptime" r/o open-file throw >r
-   pad dup 80 r@ read-file throw
-   pad swap [char] . scan
-   drop pad - $>s
+   upad dup 80 r@ read-file throw
+   upad swap [char] . scan
+   drop upad - $>s
    r> close-file throw ;
 
 : SplitTime ( TimeInSeconds - #minutes #hours #days )  60 / 60 /mod 24 /mod  ;

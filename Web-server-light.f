@@ -87,9 +87,10 @@ defer OptionalInsert ' noop is OptionalInsert
 
 : +html   ( adr cnt -- )
     htmlpage$ lcount nip over + /HtmlPage >
-       if   ." Buffer /HtmlPage of " /HtmlPage h. ."  is too small. Split your page" abort
-       then
-    htmlpage$ +lplace ;
+       if    cr ." Buffer /HtmlPage of " /HtmlPage h.
+             ."  is too small. Split your page" abort
+       else  htmlpage$ +lplace
+       then  ;
 
 : +1html   ( char - )  sp@ 1 +html drop ;
 : +html|   ( -<string|>- )    [char] | parse postpone sliteral postpone +html ; immediate
@@ -108,11 +109,11 @@ defer SitesIndex ' noop is SitesIndex
 create allowed-ip$ ," ." \ A dot to allow any IPv4 connection. Could be " 192.168.21.103"
 
 : LogRequest ( adr n type n - ) \ Logs the first line only
-  crlf" pad place  +pad  s" : " +pad
+  crlf" upad place  +upad  s" : " +upad
   2dup crlf" search
    if    nip - 120 min
    else  2drop 80 min
-   then +pad pad" +log ;
+   then +upad upad"  +log ;
 
 : send-html-page ( packet cnt sock - )
      -rot make-packet rot send-packet drop ;
@@ -177,8 +178,8 @@ needs itools.frt
 : elapsed        ( - d )  ms@ start-time - s>d ;
 
 : LogElapsed$    ( d - )
-   s" - - - - - - - " pad place (ud,.) +pad s"  Ms " +pad
-   &last-line-packet$ count +pad pad" write-log-line ;
+   s" - - - - - - - " upad place (ud,.) +upad s"  Ms " +upad
+   &last-line-packet$ count +upad upad"  write-log-line ;
 
 synonym  handle-requests noop
 
@@ -213,8 +214,8 @@ Needs security.f \ For 'Down' to shutdown the PC
 : IP-adress-allowed? ( iaddr - flag )
    dup to ClientIaddr iaddr>str 2dup allowed-ip$ count
    search nip nip -rot
-   s" ("  pad place depth (.) +pad  s" ) " +pad
-   s" In: --->" +pad +pad  pad" +log ;
+   s" ("  upad place depth (.) +upad  s" ) " +upad
+   s" In: --->" +upad +upad  upad"  +log ;
 
 
 [THEN]
@@ -275,11 +276,11 @@ cell newuser depth-target
 
 
 
-: .err-msg  ( adr cnt - )   cr .date bl emit .time cr ." Stack error at: " type  ;
+: .err-msg  ( adr cnt - )   cr .date space .time cr ." Stack error at: " type  ;
 
 : .catch-error ( adr len errcode - ) \ The line after the separators are removed.
    >r cr ." ******* Request aborted! ******* "
-\in-system-ok  cr ." Order: " order    \ Words must be defined in the TCP/IP dictionary !
+\in-system-ok  cr .date space .time  ." Order: " order    \ Words must be defined in the TCP/IP dictionary !
     cr ." Error at: " 2dup  type
     r> warnmsg
     StartHeader             \ Put the error on the html-page
@@ -380,7 +381,7 @@ S" gforth" ENVIRONMENT? [IF] 2drop
 
 cr cr
 .( Linux: )  OsVersion" type cr
-.( Dir: )    pad 255 get-dir type cr
+.( Dir: )    upad 255 get-dir type cr
 
 
 needs chains.fs
@@ -404,10 +405,10 @@ end-c-library
 2 constant IP_TTL
 
 : GetSockOption ( fileno-sock optval option -- parm )
-   swap pad pad pad !  255 pad cell+ ! pad cell+ getsockopt  ?ior pad l@ ;
+   swap upad upad upad !  255 upad cell+ ! upad cell+ getsockopt  ?ior upad l@ ;
 
 : SetSockOption ( tcp-sock optval p2 p1 size option - )
-   swap >r >r pad 2! r> swap pad r> setsockopt ?ior ;
+   swap >r >r upad 2! r> swap upad r> setsockopt ?ior ;
 
 : GetSolOpt ( fileno-sock SO_OPTION -- parm )  SOL_SOCKET GetSockOption ;
 : SetSolOpt ( tcp-sock optval p2 p1 size - )   SOL_SOCKET SetSockOption ;
@@ -419,8 +420,8 @@ end-c-library
    cr ." After:"  fileno-sock SO_Buf  GetSolOpt . ;
 
 : iaddr>str   ( iaddr -- str len )
-    pad ! utmp$ off  4 0
-      do   i pad + c@ (.) +utmp$
+    upad ! utmp$ off  4 0
+      do   i upad + c@ (.) +utmp$
            dot" +utmp$
       loop
     utmp" 1- ;
@@ -478,8 +479,8 @@ cell newuser pMsStart
 variable init-webserver-gforth-chain
 
 : initWebServer   ( - )
-    cr GetVersion# s" InitWebServer version: " pad place &Version @
-       SplitVersion (.) +pad  s" ." +pad  (.) +pad
+    cr GetVersion# s" InitWebServer version: " upad place &Version @
+       SplitVersion (.) +upad  s" ." +upad  (.) +upad
     init-webserver-gforth-chain chainperform ;
 
 
@@ -491,10 +492,10 @@ variable init-webserver-gforth-chain
 
 
 : LogElapsed$ ( d - )
-   s" - - - - "  pad place
-   depth (.) +pad s"  " +pad  \ Add depth
-   s" - -  " +pad  (ud,.) +pad s"  Ms " +pad
-   &last-line-packet$ count +pad" write-log-line ;
+   s" - - - - "  upad place
+   depth (.) +upad s"  " +upad  \ Add depth
+   s" - -  " +upad  (ud,.) +upad s"  Ms " +upad
+   &last-line-packet$ count +upad" write-log-line ;
 
 : html-responder ( packet-in$ cnt - )
       dup 0>  \ errors?
@@ -551,8 +552,8 @@ variable init-webserver-gforth-chain
 : IP-adress-allowed? ( iaddr - flag )
    dup to ClientIaddr iaddr>str 2dup allowed-ip$ count
    search nip nip -rot
-   depth  (.) pad place  s"  " +pad
-   s" In: <---" +pad +pad   pad" +log ;
+   depth  (.) upad place  s"  " +upad
+   s" In: <---" +upad +upad   upad"  +log ;
 
 #-2130706456 constant wsPing-      \ The value is reserved for UdpSender.f
 
@@ -602,8 +603,8 @@ tcp/ip definitions
 : /UpdateLinks ( - )
    GetMacList  ClearTcpServers
    s" /tmp/maclist.tmp" r/o  open-file drop >r
-   begin  pad 90 r@ read-line drop
-   while  pad swap SetTcpServerOnline
+   begin  upad 90 r@ read-line drop
+   while  upad swap SetTcpServerOnline
    repeat
    r> CloseFile drop ;
 
@@ -676,8 +677,8 @@ false value tid-http-server
      Log" Activating the web server" \
      initWebServer
            1000 ms log" Web server at: " SetHomeLink homelink$ count 2dup +log
-           ServerHost r>HostName count pad place space" +pad (time) +pad
-           s" : Webserver started at: " +pad  +pad s" /home" +pad" Wall
+           ServerHost r>HostName count upad place space" +upad (time) +upad
+           s" : Webserver started at: " +upad  +upad s" /home" +upad" Wall
      [ [DEFINED] DisableLogging ] [IF] Log" Disable logging" 0 to hlogfile [THEN]
      [ [DEFINED] execute-task ] [IF]   ['] noop is dobacktrace  \ Gforth
                                        ['] Starting-http-server execute-task to tid-http-server \ Background
@@ -722,7 +723,7 @@ false value tid-http-server
 0 value #send
 3 constant #max-attempts           256 newuser UdpOut$
 
-: UdpOut"    ( - pad count )          UdpOut$ count  ;
+: UdpOut"    ( - upad count )          UdpOut$ count  ;
 : +UdpOut    ( adr cnt -- )           UdpOut$ +place ;
 : .UdpOut    ( n -- )                 (.) +UdpOut ;
 
@@ -774,7 +775,7 @@ FORTH DEFINITIONS
    s" sudo ./kf.sh" system ;
 
 : SendTcp ( msg$ cnt #server -- )      \ Using: SOCK_STREAM (TCP/IP)
-   >r s" TCP/IP: ---> " pad place   2dup +pad s"  @" +pad r@ (.) +pad  pad" +log
+   >r s" TCP/IP: ---> " upad place   2dup +upad s"  @" +upad r@ (.) +upad  upad"  +log
    r> open#Webserver dup 0=
      if    3drop log" The receiver can not be reached."
      else  dup>r send-packet drop r> ShutdownTCPConnection
@@ -807,16 +808,16 @@ FORTH DEFINITIONS
 : LogFn  ( flag - )
      if     s" ?"
      else   s" -"
-     then  +pad
-    s" -->" +pad ;
+     then  +upad
+    s" -->" +upad ;
 
 : logRetryUdpMsg  { msg$ cnt #server -- flag }    \ EG: F0 on server 1 is sent as: F0 @1    xxx
    msg$ cnt InitUdpOutMsg false
    #max-attempts 1+ 1                      \ Depends on: >F0 of #server
-          do   i  (.) pad place s"  UDP: " +pad
+          do   i  (.) upad place s"  UDP: " +upad
                #server Get#F0  LogFn
-               #server r>ipAdress count +pad space" +pad
-               UdpOut$ count  +pad  crlf" +pad" +log
+               #server r>ipAdress count +upad space" +upad
+               UdpOut$ count  +upad  crlf" +upad" +log
                UdpOut$ count #server SendUdp
                #server WaitForF0
                          if  drop true leave
@@ -963,12 +964,12 @@ defer udp-requests  ( adr len --)
 
 : TmpDir ( - adr_counted$ )
    s" /tmp" file-status nip 0>=
-     if    s" /tmp/" pad place
-     else  0 pad !
-     then  pad count ;
+     if    s" /tmp/" upad place
+     else  0 upad !
+     then  upad count ;
 
 : Add/Tmp/Dir ( &filename cnt - &/tmp/filename cnt )
-   TmpDir pad place +pad" ;
+   TmpDir upad place +upad" ;
 
 : start-servers ( - )
    tcp/ip seal

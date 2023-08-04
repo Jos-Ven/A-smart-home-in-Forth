@@ -92,9 +92,9 @@ needs UdpSender.f
 : ReceiverForm ( - )
    <form>
    +html| <input type="submit" onclick="return false" hidden="true"/>|  \ Disables the key Enter
-         <tr><tdL>  HTML| <a target="_blank" rel="noopener noreferrer" href="http://| pad place
-                    flash-to$ lcount +pad  s" :" +pad RemotePort (.) +pad
-                    HTML| /home">| +pad s" Receiver:" +pad  HTML| </a>| +pad pad count  +Html
+         <tr><tdL>  HTML| <a target="_blank" rel="noopener noreferrer" href="http://| upad place
+                    flash-to$ lcount +upad  s" :" +upad RemotePort (.) +upad
+                    HTML| /home">| +upad s" Receiver:" +upad  HTML| </a>| +upad upad count  +Html
              </td><tdL> s" SaveBtn"  flash-to$   lcount 14 <input-text> </td>
    </form> ;
 
@@ -145,12 +145,12 @@ needs UdpSender.f
 
 : InitDir ( newdir cnt - )
     2dup set-dir
-      if    2drop pad 255 get-dir  \ nok change to the current dir
+      if    2drop upad 255 get-dir  \ nok change to the current dir
       then
     dir$ place  ;
 
 : CheckDir ( - )
-  pad 255 get-dir dir$ count compare
+  upad 255 get-dir dir$ count compare
     if  dir$ count InitDir
     then ;
 

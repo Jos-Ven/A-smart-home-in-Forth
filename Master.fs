@@ -14,8 +14,8 @@ FindOwnId SetMasterIndication
 
 : SentUpdateSignal1System ( #server - )
     dup NegateR>Version
-    s" Out: UpdateSignal to server " pad place
-    dup (.) +pad crlf$ count +pad" +log
+    s" Out: UpdateSignal to server " upad place
+    dup (.) +upad crlf$ count +upad" +log
     s" Gforth_UpdateSignal"  rot SendUdp$ ;
 
 : SetVersionFile ( n - )
@@ -212,7 +212,7 @@ Needs SetVersionPage.fs
      then  ;
 
 : <<UpdateButton>> ( buttontxt cnt - )
-   <tr><td>  2dup pad place s" UpdateHit" +pad pad count <CssButton> </td> ;
+   <tr><td>  2dup upad place s" UpdateHit" +upad upad count <CssButton> </td> ;
 
 : WriteStartNupdate.sh ( - hdnl )
    nupdate.sh$ count r/w create-file throw >r
@@ -224,7 +224,7 @@ Needs SetVersionPage.fs
   s" echo End nupdate.sh" r@ write-line throw
   s" exit 0" r@ write-line throw
   r> close-file drop
-  s" sudo chmod +x " pad place nupdate.sh$ count +pad" system ;
+  s" sudo chmod +x " upad place nupdate.sh$ count +upad" system ;
 
 : <<UpdateButtonOption>>  ( buttontxt cnt Option - )
     -rot <<UpdateButton>>  <tdL> +UpdateOption  </td></tr> ;
@@ -329,7 +329,7 @@ Needs SetVersionPage.fs
 previous
 
 
-TCP/IP DEFINITIONS \ Adding the requestrs to the tcp/ip dictionary
+TCP/IP DEFINITIONS \ Adding the requests to the tcp/ip dictionary
 
 \ Administrations page:
 : /Admin			( - ) 	['] AdministrationPage set-page ;

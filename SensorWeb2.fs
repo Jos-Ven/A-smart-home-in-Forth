@@ -90,7 +90,7 @@ false value S5? \ to detect my S5
          s" &nbsp;samples&nbsp;evaluated." <<FontSizeColor>> ;
 
 : addchar ( adr cnt char - adr cnt )
-    -rot pad place sp@ 1 +pad drop pad count ;
+    -rot upad place sp@ 1 +upad drop upad count ;
 
 : .CombinedPlot ( - )
     s" Verdana" <FontFace .ShortAbstract
@@ -107,8 +107,8 @@ false value S5? \ to detect my S5
 : SetSvgSizeRel ( w% h% - )
    HeightViewPort swap % to SvgHeight WidthViewPort swap % to SvgWidth  ;
 
-: (HtmlSpaceStart) ( - ) s" &nbsp;" pad place ;
-: ((inlude$))      ( adr cnt - adr2 cnt2  ) +pad pad count ;
+: (HtmlSpaceStart) ( - ) s" &nbsp;" upad place ;
+: ((inlude$))      ( adr cnt - adr2 cnt2  ) +upad upad count ;
 
 : .SensorValues ( - )
     s" Trebuchet MS" <FontFace

@@ -1,5 +1,5 @@
 marker -schedule-tool.f   s" cforth" ENVIRONMENT?
-   [IF]   drop cr lastacf .name #19 to-column .( 16-07-2023 ) \ By J.v.d.Ven
+   [IF]   drop cr lastacf .name #19 to-column .( 29-07-2023 ) \ By J.v.d.Ven
    [THEN]
 
 0 [if]
@@ -7,7 +7,6 @@ marker -schedule-tool.f   s" cforth" ENVIRONMENT?
 NOTE: The local time should be right before running a schedule.
 New or changed entries are executed when they are scheduled in the future.
 Under Cforth schedule-tool.f can be flashed into ROM.
-Each entry needs a valid time. That is also needed when you remove an entry.
 
 There are 2 tables in use.
 A schedule-table is linked to an options-table.
@@ -124,8 +123,8 @@ S" gforth" ENVIRONMENT? [IF] 2drop \ No polling under gforth
 : schedule ( - )      \ Execute entries for today that are waiting till the right time
    next-scheduled-time time>mmhh <= \  All entries should be complete at 23:59
            if     scheduled @ 1+ &schedule-table nt>record sched.record-->opt.record \ inside tabel?
-                   if    s" Schedule: " pad place
-                         >opt.xt @  dup >name$ +pad pad" +log
+                   if    s" Schedule: " upad place
+                         >opt.xt @  dup >name$ +upad upad" +log
                          execute 1 scheduled +!
                    else  drop
                    then
@@ -404,6 +403,7 @@ TCP/IP DEFINITIONS
        else  time>mmhh
        then  -rot >sched.option !
    &schedule-table @  &schedule-table table-size &schedule-file count file-it
+
    StopRunSchedule?
        if  restart-changed-schedule
        else  drop sort-schedule

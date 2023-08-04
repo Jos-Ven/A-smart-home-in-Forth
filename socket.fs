@@ -142,7 +142,7 @@ sockaddr_in newuser sockaddr-tmp
 addrinfo newuser hints
 
 : c-string ( addr u -- addr' )
-    tuck pad swap move pad + 0 swap c! pad ;
+    tuck upad swap move upad + 0 swap c! upad ;
 
      0 Constant PF_UNSPEC
      2 Constant PF_INET

@@ -1,4 +1,4 @@
-Marker TimeDiff.f \ For Gforth and Win32Forth. By J.v.d.Ven 07-11-2022
+Marker TimeDiff.f \ For Gforth and Win32Forth. By J.v.d.Ven 01-08-2023
 
 needs Common-extensions.f
 needs calencal.f
@@ -66,8 +66,9 @@ defer sync-time ' noop is sync-time
    ftrunc Moment-from-JD f>s  Gregorian-from-Fixed -swap ;
 
 : Time-from-UtcTics     ( f: UtcTics - ) ( - ss mm uu )
-   Jd-from-UtcTics -ftrunc #SecondsOneDay f*  f>s
+   Jd-from-UtcTics -ftrunc #SecondsOneDay f* fround f>s
    #SecondsOneHour /mod swap 60 /mod 60 /mod drop rot ;
+
 
 :  +PlaceTime ( ss mm uu  - )  0 +##  [char] : +##  [char] : +## ;
 :  +PlaceDate ( dd mm year - ) (.) +utmp$  [char] - +##   [char] - +## ;
@@ -250,7 +251,7 @@ S" gforth"     ENVIRONMENT? [IF] 2DROP
 \ Floats are used to avoid the problem of 2038.
 
 : UtcTics-from-Time&Date      ( ss mm uu dd mm year - ) ( f: - UtcTics )
-   jd UtcTics-from-Jd&Time fdup UtcOffset f- ;
+   jd UtcTics-from-Jd&Time ;
 
 : LocalTics-from-UtcTics      ( f: UtcTics - LocalTics )  fdup UtcOffset f+ ;
 : local-time-now              ( - f: UtcTics )   @time LocalTics-from-UtcTics  ;
@@ -289,8 +290,6 @@ S" gforth"     ENVIRONMENT? [IF] 2DROP
 
 : .fdays&time        ( f: UtcTics - )   fdays&time" type  ;
 : .day               ( f: UtcTics - )   Jd-from-UtcTics f>s week-day day" type bl emit ;
-
-: UtcTics-from-UnixTicsLocal ( f: UnixTicsLocal - UtcTics ) fdup UtcOffset f+ ;
 
 : .UTCoffset                 ( f: UnixTicsLocal - )
     ."  UTC " UtcOffset f>s  #SecondsOneHour /mod dup 0>=

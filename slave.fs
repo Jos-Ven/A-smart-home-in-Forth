@@ -20,7 +20,7 @@ defer KillTasks    ' noop is KillTasks
 
 [defined] hMapIpTable
     [if]      : UnmapIpTable ( - )   hMapIpTable 2@ ['] unmap catch
-                     pad /pad erase  pad to &servers ;
+                     upad /pad erase  upad to &servers ;
     [else]    : UnmapIpTable ( - )  ;
     [then]
 
@@ -90,7 +90,12 @@ also html
        else  s" The last part of gf.log: " ConsoleLogFile IncludeFile
        then ;
 
-: WebLogs   ( - htmlpage$ lcount) s" The last part of the web logging: " logFile" IncludeFile ;
+: WebLogs   ( - )
+    hlogfile dup 0<>
+      if    flush-file drop
+      else  drop
+      then
+    s" The last part of the web logging: " logFile" IncludeFile ;
 
 : LogLinks ( - )
       HTML| 1. | +HtmlNoWrap  HTML| /gflogSlv|  HTML| Console| <<Link>>
@@ -180,7 +185,7 @@ defer SosLayout
 : check-ip4? ( adr cnt - adr cnt|0 )
    3 SkipDots 2dup s>number?
      if    2drop  GetIpHost$ 2dup 3 SkipDots nip -
-           pad place +pad pad"
+           upad place +upad upad"
      else  2drop 2drop 0 0
      then ;
 
@@ -234,7 +239,7 @@ tcp/ip definitions
             utmp$ off  html| sudo date -s  "| +utmp$
             +PlaceYmdTime  s"  UTC" +utmp$    html| "| +utmp$
             utmp" ShGet 2drop
-            @time ftime" s" New time: " pad place +pad" +log
+            @time ftime" s" New time: " upad place +upad" +log
             RebuildArpTable-
               if  PingTcpServers ( ClearArpTable ) false to RebuildArpTable-
               then

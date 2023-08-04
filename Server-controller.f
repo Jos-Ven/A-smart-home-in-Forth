@@ -1,7 +1,7 @@
 marker Server-controller.f
 needs Common-extensions.f
 
-: +pad-log ( - )  +pad" +log ;
+: +pad-log ( - )  +upad" +log ;
 
 
 S" win32forth" ENVIRONMENT? [IF] DROP
@@ -12,9 +12,9 @@ include itools.frt
 0x8 constant MSG_WAITALL
 
 : host>addr ( addr u -- x|0 )
-    2dup pad place pad +null
-    pad 1+ gethostbyname dup 0=
-       if    drop pad place s"  --- unknown Host." +pad-log 0
+    2dup upad place upad +null
+    upad 1+ gethostbyname dup 0=
+       if    drop upad place s"  --- unknown Host." +pad-log 0
        else  nip nip ( hostent) 3 CELLS + ( h_addr_list) @ @ @
        then ;
 
@@ -148,7 +148,7 @@ end-c-library
       if   false
       else  socket fileno to socket   3 0
                do  socket c-addr size MSG_NOSIGNAL ['] send catch \ Catching possible Write to broken pipe
-                     if    2drop 2drop  -1 to size leave
+                     if    2drop 2drop  leave
                      else  dup size = if to size leave then
                            dup -1 =   if to size leave then
                            \ log" Retry remainder."
@@ -156,11 +156,10 @@ end-c-library
                            to size to c-addr
                      then
                loop
-            size 0<
-            if    log" Write error to sock." false
-            else  size
+            size dup 0<
+            if    log" Write error to sock."
             then
-      then ;
+      then  ;
 
 : ShutdownConnection ( fileno - )  SHUT_RDWR shutdown drop ;
 
@@ -172,7 +171,7 @@ end-c-library
 : get-info ( addr u port -- info|0 ) 0 { w^ addrres }
     >r 2dup r> base @ >r  decimal  0 <<# 0 hold #s #>  r> base ! drop
     >r c-string r> hints addrres getaddrinfo #>> ?dup
-       if     -rot pad place s"  --- " +pad
+       if     -rot upad place s"  --- " +upad
 	      gai_strerror cstring>sstring +pad-log 0
        else   2drop addrres @
        then ;
@@ -316,20 +315,20 @@ defer &socks ( - UserArray&socks )
 
 : setAllF0     ( n - ) #servers 0  do  dup i Set#F0 loop drop ;
 
-' hostname$ alias hostname$
-
- pad 1+ 255 gethostname drop
- pad 1+ strlen pad c!
- pad hostname$ pad c@ 1+ cmove
+ upad 1+ 255 gethostname drop
+ upad 1+ strlen upad c!
+ upad hostname$ upad c@ 1+ cmove
 
 
 : .(u.r)  ( n right -) (u.r) type ;
 
-48 1 + constant INET6_ADDRSTRLEN
-create subnet$ INET6_ADDRSTRLEN allot
-create OwnIP$  INET6_ADDRSTRLEN allot
+48  constant INET6_ADDRSTRLEN
+create subnet$ INET6_ADDRSTRLEN 1+ allot
+create OwnIP$  INET6_ADDRSTRLEN 1+ allot
+INET6_ADDRSTRLEN 1+ newuser tmpIP$
 
-: host-id>ip$ ( net-id - ) subnet$ count pad place (.) +pad pad" ; \ ip4
+: host-id>ip$ ( host-id - ip4$ cnt )
+  subnet$ count tmpIP$ place (.) tmpIP$ +place  tmpIP$ count ; \ ip4
 
 2variable range-Gforth-servers
 
@@ -437,8 +436,8 @@ S" gforth" ENVIRONMENT? [IF] 2drop
      loop ;
 
 : FileIp ( fd server# - fd )
-    ipAdress$ pad place space" +pad
-    pad count 2 pick write-line
+    ipAdress$ upad place space" +upad
+    upad count 2 pick write-line
       if  log" FileIp: Can't file IP."
       then ;
 
