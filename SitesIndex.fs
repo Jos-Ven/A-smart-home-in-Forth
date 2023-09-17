@@ -119,9 +119,9 @@ create ShowActivity$ 12 allot s" Pc" ShowActivity$ place
     <tr> +HTML| <td align="left" valign="bottom">|
             +HTML| Favorites: |
             s" https://groups.google.com/g/comp.lang.forth" s" Clf"           <<TopLink>> .HtmlSpace
-            s" https://www.facebook.com/"                   s" Fb"            <<TopLink>> .HtmlSpace
+            s" https://www.facebook.com/"                   s" Faceb."            <<TopLink>> .HtmlSpace
             s" https://github.com/Jos-Ven?tab=repositories" s" Git JV"        <<TopLink>> .HtmlSpace
-            s" https://rosettacode.org/wiki/Category:Forth" s" Rosetta Forth" <<TopLink>> .HtmlSpace
+            s" https://www.rosettacode.org/wiki/Category:Forth" s" Rosetta Forth" <<TopLink>> .HtmlSpace
             s" https://www.taygeta.com/fsl/sciforth.html"   s" SciForth"      <<TopLink>>
          <br> +Arplink s" /UpdateLinksIndex"  Sitelinks
          </td>

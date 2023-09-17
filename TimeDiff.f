@@ -1,4 +1,8 @@
-Marker TimeDiff.f \ For Gforth and Win32Forth. By J.v.d.Ven 01-08-2023
+Marker TimeDiff.f \ For Gforth and Win32Forth. By J.v.d.Ven 17-09-2023
+
+\ Time specifications like  ( ss mm uu JD -  ) are in UTC
+\ unless otherwise indicated like: ( hhmmTargetLocal -- ) or ( f: UtcTics - ss mm uu dd mm yearLocal )
+
 
 needs Common-extensions.f
 needs calencal.f
@@ -253,7 +257,8 @@ S" gforth"     ENVIRONMENT? [IF] 2DROP
 : UtcTics-from-Time&Date      ( ss mm uu dd mm year - ) ( f: - UtcTics )
    jd UtcTics-from-Jd&Time ;
 
-: LocalTics-from-UtcTics      ( f: UtcTics - LocalTics )  fdup UtcOffset f+ ;
+: LocalTics-from-UtcTics      ( f: UtcTics - LocalTics ) fdup UtcOffset f+ ;
+: UtcTics-from-LocalTics      ( f: LocalTics - UtcTics ) fdup UtcOffset f- ;
 : local-time-now              ( - f: UtcTics )   @time LocalTics-from-UtcTics  ;
 : time>mmhh                   ( - mmhh )  local-time-now time-from-utctics #100 * + nip ;
 

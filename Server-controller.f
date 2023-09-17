@@ -157,7 +157,7 @@ end-c-library
                      then
                loop
             size dup 0<
-            if    log" Write error to sock."
+            if    cr .time cr c-addr 200 dump  log" Write error to sock."
             then
       then  ;
 
@@ -197,18 +197,15 @@ end-c-library
     \ log" Can't connect"  \ Optional
     0 ;
 
-\ sema  sem-openSock
-
 : open-port-socket  ( c-addr u port sock_ ipproto -- handle|0 )
-    \ sem-openSock lock
     swap >hints    \ Sets ai_socktype
     AF_INET hints ai_family   l!
             hints ai_protocol l!
     get-info dup 0<>
-       if  get-socket
+       if  get-socket dup
+            if   dup reuse-addr
+            then
        then
-    dup reuse-addr
-    \ sem-openSock unlock
      ;
 
 [undefined] strlen [if]

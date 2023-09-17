@@ -1,4 +1,4 @@
-\ 14-07-2023 A web server by J.v.d.Ven.
+\ 17-09-2023 A web server by J.v.d.Ven.
 
 0 [if]
 
@@ -350,13 +350,13 @@ cell newuser ms_req
                    then
    htmlpage$ lcount aSock @ send-html-page
    ms@ ms_req @ -
-   cr 20 0 do [char] - emit loop  space . ." ms." cr ;
+   cr 20 0 do [char] - emit loop  space . ." ms." cr xt-htmlpage off ;
 
 : (handle-request) ( adrRequest lenRequest -- )
    cut-line  \ Extract the line with GET
    2dup remove_seperators
    evaluating_tcp/ip
-   htmlpage$ lcount aSock @ send-html-page ;
+   htmlpage$ lcount aSock @ send-html-page xt-htmlpage off ;
 
 \  ' see-request is handle-request       \ To see the complete received request
    ' (handle-request) is handle-request  \ To see errors only
@@ -778,7 +778,7 @@ FORTH DEFINITIONS
    >r s" TCP/IP: ---> " upad place   2dup +upad s"  @" +upad r@ (.) +upad  upad"  +log
    r> open#Webserver dup 0=
      if    3drop log" The receiver can not be reached."
-     else  dup>r send-packet drop r> ShutdownTCPConnection
+     else  dup>r send-packet drop r>  25 ms close-socket
      then ;
 
 

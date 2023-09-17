@@ -1,4 +1,4 @@
-marker UdpSender.f s" gforth" ENVIRONMENT? [IF] 2drop .latest [THEN] \ 13-07-2023
+marker UdpSender.f s" gforth" ENVIRONMENT? [IF] 2drop .latest [THEN] \ 17-09-2023
 
 0 [if]
 
@@ -99,9 +99,6 @@ defer retry-cmd     ' noop is retry-cmd
    CheckCmd SentInfoPacked ;
 
 variable ConnectionRes
-
-: 0TestConnection  ( - )
-    200 ms ConnectionRes off Send-CheckCmd  ReportNoReply ;
 
 : TestConnection  ( - )
     ConnectionRes off Send-CheckCmd  ReportNoReply 200 ms ;

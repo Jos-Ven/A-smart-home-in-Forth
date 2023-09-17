@@ -61,7 +61,7 @@ RemoveNupdate.sh
      s" sh ./nget.sh >nget.log" system \  get the updates
     RunLinuxScript
        if     RestartGforth  \ Will also enable ping again after a restart
-       else   log" No nupdates received"
+       else   log" No nupdates received. No NAS?"
        then ;
 
 : WaitTillnget ( -- )
