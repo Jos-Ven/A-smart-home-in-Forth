@@ -227,10 +227,11 @@ true constant setting
    00 00 00 date-now UtcTics-from-Time&Date f- ;
 
 : #NsTill  ( hhmmTargetLocal -- ) ( F: -- NanosecondsUtc )
-  UtcTics-from-hm  UtcTics-from-LocalTics  @time LocalTics-from-UtcTics f2dup f<
+  UtcTics-from-hm  UtcTics-from-LocalTics @time f2dup f<
       if   fswap #SecondsToDay f+ fswap \ Next day when the time has past today
       then
-   f- Nanoseconds  f* ;
+   f- Nanoseconds f* ;
+
 
 : WaitUntil ( hhmmTargetLocal -- )
    dup #NsTill  #Ns2Hours d>f f/ f>s 1- 0 max 0

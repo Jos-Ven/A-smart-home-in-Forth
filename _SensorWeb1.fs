@@ -331,7 +331,11 @@ create &floorplan #floors #floorItems * cells allot
 [THEN]
 
 -1 value (pm25)
-: +pm25 ( - ) +HTML|  pm2.5: |  (pm25) s>f 100e f/ (f.2) +html ;
+-1 value (Time_pm25)
+
+: +pm25 ( - )
+   (Time_pm25) 100 /mod mh>mh$ +html
+   +HTML|  pm2.5: |  (pm25) s>f 100e f/ (f.2) +html ;
 
 [defined] Floorplan [IF]
 : DummyFloor
@@ -735,7 +739,7 @@ create &Bme280Data 200 allot
 
 
 0  constant  LdrDataReceiver    \ Server that gets the Ldr Data
-1.8e fconstant MinimalLdr      \ When the LDR gets below MinimalLdr \ was 1.9
+2.0e fconstant MinimalLdr      \ When the LDR gets below MinimalLdr \ was 1.8
 0 value LowLightLevelsent
 
 cr .( Ldr:) Ldrf@% f.
@@ -747,6 +751,7 @@ cr .( Ldr:) Ldrf@% f.
           else  log" Failed."
           then  true to LowLightLevelsent
           Ldrf@% (f.2) +log
+          0001 WaitUntil  0 to LowLightLevelSent   log" Reset LowLightLevelSent" 
     else  drop
     then ;
 
@@ -780,11 +785,6 @@ cr .( Ldr:) Ldrf@% f.
         repeat
       cr  .date space .time ."  Bye JobSendBme280" Bye  ;
 
-: JobResetLowLightLevelSent   ( - )
-    log" JobResetLowLightLevelSent started"
-      begin   0001 WaitUntil   log" Reset LowLightLevelSent"   0 to LowLightLevelSent
-      again ;
-
 : LowLevelPressureWarning      ( - )
    PressureSamples  AverageSamples 1007e f<  \ Give a warning when the presure gets below 1007 Hpa
             if    s" /w10" 11 SendTcp   \ The 11th server is an ESP8266F
@@ -792,13 +792,22 @@ cr .( Ldr:) Ldrf@% f.
 ;
 
 : JobSentToWarningLight   ( - )
-    5000 ms
+    7000 ms
     log" JobSentToWarningLight started"
          begin   web-server-sock
          while   [DEFINED] WarningLight  [IF]  LowLevelPressureWarning  [THEN]
-                 SendLowLightLevelOnceAfter  1 Minutes*   ms
+                 1 Minutes*   ms
          repeat
    cr  .date space .time ."  Bye JobSentToWarningLight" Bye  ;
+
+: JobSendLowLightLevel   ( - )
+    5000 ms
+    log" JobSendLowLightLevel started"
+         begin   web-server-sock
+         while  SendLowLightLevelOnceAfter  1 Minutes*   ms
+         repeat
+   cr  .date space .time ."  Bye JobSendLowLightLevel" Bye  ;
+
 
 [DEFINED] SendingState [IF]
 
@@ -916,21 +925,23 @@ PREVIOUS
 LogValues
 
 0 value TidJobSendBme280
-0 value TidJobResetLowLightLevelSent
 0 value TidJobSentToWarningLight
+0 value TidJobSendLowLightLevel
 
 cr .( Starting the support jobs )  \ Receiving servers should be adapted
-    [DEFINED] PushBme280Data [IF] ' JobSendBme280             execute-task to TidJobSendBme280             [THEN]
-    [DEFINED] LowLightLevel  [IF] ' JobResetLowLightLevelSent execute-task to TidJobResetLowLightLevelSent [THEN]
-    [DEFINED] LowLightLevel  [IF] ' JobSentToWarningLight     execute-task to TidJobSentToWarningLight     [THEN]
-    [DEFINED] SendingState   [IF] ' Send-Floor-job            execute-task to Tid-Send-Floor-job           [THEN]
+    [DEFINED] PushBme280Data [IF] ' JobSendBme280          execute-task to TidJobSendBme280         [THEN]
+    [DEFINED] WarningLight   [IF] ' JobSentToWarningLight  execute-task to TidJobSentToWarningLight [THEN]
+    [DEFINED] LowLightLevel  [IF] ' JobSendLowLightLevel   execute-task to TidJobSendLowLightLevel  [THEN]
+    [DEFINED] SendingState   [IF] ' Send-Floor-job         execute-task to Tid-Send-Floor-job       [THEN]
 
 
 : (KillTasks ( - )
      [DEFINED] SendingState        [IF] Tid-Send-Floor-job       kill [THEN]
      [DEFINED] CentralHeating.fs   [IF] TidJobNightService       kill [THEN]
      [DEFINED] PushBme280Data      [IF] TidJobSendBme280         kill [THEN]
-     [DEFINED] LowLightLevel       [IF] TidJobSentToWarningLight kill [THEN]
+     [DEFINED] WarningLight        [IF] TidJobSentToWarningLight kill [THEN]
+     [DEFINED] LowLightLevel       [IF] TidJobSendLowLightLevel  kill [THEN]
+
  ;
 
 ' (KillTasks is KillTasks
@@ -986,7 +997,7 @@ TCP/IP DEFINITIONS \ Adding the page and it's actions to the tcp/ip dictionary
       then
     Ignore-remainder ;
 
-: pm25         ( pm2.5 from - ) drop to (pm25) ;
+: pm25         ( pm2.5 from - ) drop to (pm25) @hm_time to (Time_pm25) ;
 
 : Gforth::Standby     ( parm from - ) s" OnStandby" +log  OnStandby ;
 
