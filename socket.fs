@@ -396,6 +396,7 @@ s" sock read error"    exception Constant !!sockread!!
 
 : reuse-addr ( socket -- ) 0 { w^ sockopt } 1 sockopt l!
     SOL_SOCKET SO_REUSEADDR sockopt 4 setsockopt drop ;
+
 \ : reuse-port ( socket -- ) \ only on BSD for now...
 \     SOL_SOCKET SO_REUSEPORT sockopt-on 1 over l! 4 setsockopt drop ;
 
@@ -406,7 +407,8 @@ s" sock read error"    exception Constant !!sockread!!
 
 : create-server  ( port# -- server )
     AF_INET port+family
-    new-socket dup ?ior dup reuse-addr >r
+    new-socket dup ?ior dup reuse-addr
+   >r
     r@ sockaddr-tmp sockaddr_in4 bind ?ior r> ;
 
 : create-server6  ( port# -- server )
@@ -416,7 +418,7 @@ s" sock read error"    exception Constant !!sockread!!
 
 : create-udp-server  ( port# -- server )
     AF_INET port+family
-    new-udp-socket dup ?ior dup reuse-addr >r
+    new-udp-socket dup ?ior dup reuse-addr ( reuse-addr ) >r
     r@ sockaddr-tmp sockaddr_in4 bind ?ior r> ;
 
 : create-udp-server6  ( port# -- server )

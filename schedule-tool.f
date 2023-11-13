@@ -1,24 +1,23 @@
 marker -schedule-tool.f   s" cforth" ENVIRONMENT?
-   [IF]   drop cr lastacf .name #19 to-column .( 29-07-2023 ) \ By J.v.d.Ven
+   [IF]   drop cr lastacf .name #19 to-column .( 21-06-2023 ) \ By J.v.d.Ven
    [THEN]
 
 0 [if]
 
 NOTE: The local time should be right before running a schedule.
 New or changed entries are executed when they are scheduled in the future.
-Under Cforth schedule-tool.f can be flashed into ROM.
+Under Cforth schedule-tool.f can be flased into ROM.
 
 There are 2 tables in use.
 A schedule-table is linked to an options-table.
 The schedule-table uses records-pointers for sorting.
-The options-table is used to execute entries of the schedule and it is used in the drop-down of a HTML menu.
+The options-table is used to execute entries of schedule and in the dropdown of a HTML menu.
 
 The CONTENT of the field sched.option is linked to the POSITION of a option-record.
 Errors will occur when option-records are changed/deleted without changing/deleting.
 the linked schedule-records.
 
 Pointers should be initialized by the application.
-
 [then]
 
 decimal
@@ -123,8 +122,8 @@ S" gforth" ENVIRONMENT? [IF] 2drop \ No polling under gforth
 : schedule ( - )      \ Execute entries for today that are waiting till the right time
    next-scheduled-time time>mmhh <= \  All entries should be complete at 23:59
            if     scheduled @ 1+ &schedule-table nt>record sched.record-->opt.record \ inside tabel?
-                   if    s" Schedule: " upad place
-                         >opt.xt @  dup >name$ +upad upad" +log
+                   if    s" Schedule: " pad place
+                          >opt.xt @  dup >name$ +upad upad" +log
                          execute 1 scheduled +!
                    else  drop
                    then
@@ -168,8 +167,6 @@ s" cell 1 cells key: schedule-option schedule-option Ascending bin-sort" evaluat
 : start-schedule    ( - )  ['] sync-schedule  execute-task to TidSchedule
                            true to StopRunSchedule? ;
 
-: reboot-system      ( - ) cr ." REBOOTING"  reboot ;
-
 [ELSE]
 
 
@@ -206,10 +203,12 @@ s" cell 1 cells key: schedule-option schedule-option Ascending bin-sort" evaluat
 defer sort-schedule
 
 : init-schedule ( &schedule-file - ) \ The keys must be defined in RAM.
-   to &schedule-file
+   to &schedule-file /table init-table to &schedule-table
+   #2 &schedule-table >#records !
+   #2 cells &schedule-table >record-size !
    s" 0 1 cells key: schedule-timer  schedule-timer  Ascending bin-sort" evaluate
 s" cell 1 cells key: schedule-option schedule-option Ascending bin-sort" evaluate
-s" : (sort-schedule) ( - ) by[ schedule-option schedule-timer ]by SORT ;" evaluate
+s" : (sort-schedule) ( - ) by[ schedule-option schedule-timer ]by &schedule-table table-sort ;" evaluate
 s" ' (sort-schedule) is sort-schedule" evaluate
    extend-schedule ;
 
@@ -235,12 +234,15 @@ s" ' (sort-schedule) is sort-schedule" evaluate
 
 : #seconds-deep-sleeping  ( #seconds - )
    dup .time-duration
-   range-Gforth-servers 2@ -ArpRange
-   esp-wifi-stop 1 rtc-clk-cpu-freq-set 10 ms
-   cr ."  SLEEPING." deep-sleep ;
+   range-Gforth-servers 2@ -ArpRange 2000 ms
+   esp-wifi-stop spiffs-unmount 1 rtc-clk-cpu-freq-set 10 ms
+   cr ."  SLEEPING." 3 max deep-sleep ;
+
+60 60 * value seconds-before-sunset
+200 9 range-Gforth-servers 2! \ Network depended !
 
 : sleep-seconds-before-sunset        ( SecondsBeforeSunset - )
-    UtcSunSet  @time f- utcoffset f+ s>f f- fdup f0>
+    UtcSunSet  @time f- s>f f- fdup f0>
        if    cr .date .time ."  Needed sleep " f>s  #seconds-deep-sleeping
        else  fdrop cr .date .time ."  No sleep needed."
              false to WaitForSleeping-
@@ -264,7 +266,7 @@ s" ' (sort-schedule) is sort-schedule" evaluate
 
 : schedule|sunset ( - )
    next-scheduled-time 2359 > \ No entries in schedule?
-     if    [ 60 60 * ] literal sleep-seconds-before-sunset
+     if    seconds-before-sunset sleep-seconds-before-sunset
      else  (sleeping-schedule)              \ Follow schedule
      then ;
 
@@ -288,8 +290,6 @@ s" ' (sort-schedule) is sort-schedule" evaluate
            if  (sleep-till-sunset)
            then
        then ;
-
-: reboot-system            ( - ) bye ;
 
 
 [THEN]
@@ -330,7 +330,7 @@ ALSO HTML
       loop ;
 
 : html-schedule-list ( xt-option-list - )
-   +HTML| <table border="0" cellpadding="0" cellspacing="12" width="380px">|
+   +HTML| <table border="0" cellpadding="0" cellspacing="12" width="400px">|
       <tr> 2 <#tdL> +HTML| Daily schedule:| </td> </tr>
       <tr>   <td>  +HTML| Start| </td> <td>  +HTML| Action| </td>
              <td>  +HTML| Confirm| </td>
@@ -429,12 +429,11 @@ TCP/IP DEFINITIONS
       then ;
 
 : StopRunSchedule   ( - )  (StopRunSchedule)   ;
-: reboot ( - ) reboot-system ;
 
 
 S" cforth" ENVIRONMENT? [IF] DROP
-        : /Scheduled ( -- )    req-buf /req-buf s" %3A" BlankString 2drop ;
-[ELSE]  : /Scheduled ( -- )    req-buf lcount   s" %3A" BlankString 2drop ;
+        : clr-req-buf ( -- )    req-buf /req-buf s" %3A" BlankString 2drop ;
+[ELSE]  : clr-req-buf ( -- )    req-buf lcount   s" %3A" BlankString 2drop ;
 [THEN]
 
 FORTH DEFINITIONS

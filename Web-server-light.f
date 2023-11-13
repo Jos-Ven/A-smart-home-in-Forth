@@ -1,4 +1,4 @@
-\ 17-09-2023 A web server by J.v.d.Ven.
+\ 14-07-2023 A web server by J.v.d.Ven.
 
 0 [if]
 
@@ -163,8 +163,8 @@ needs itools.frt
 
 \ --------
 
-20 constant timeout-sock-read?
-40 constant #timeouts-sock-read?
+2 constant timeout-sock-read?
+2 constant #timeouts-sock-read?
 
 : wait-for-packet  ( aSock - n )
    0 swap  #timeouts-sock-read? 0
@@ -182,6 +182,7 @@ needs itools.frt
    &last-line-packet$ count +upad upad"  write-log-line ;
 
 synonym  handle-requests noop
+synonym Add/Tmp/Dir noop
 
 : html-responder ( packet-in$ cnt - )
       dup 0>  \ errors?
@@ -407,11 +408,14 @@ end-c-library
 : GetSockOption ( fileno-sock optval option -- parm )
    swap upad upad upad !  255 upad cell+ ! upad cell+ getsockopt  ?ior upad l@ ;
 
+: GetSolOpt ( fileno-sock SO_OPTION -- parm )  SOL_SOCKET GetSockOption ;
+
 : SetSockOption ( tcp-sock optval p2 p1 size option - )
    swap >r >r upad 2! r> swap upad r> setsockopt ?ior ;
 
-: GetSolOpt ( fileno-sock SO_OPTION -- parm )  SOL_SOCKET GetSockOption ;
 : SetSolOpt ( tcp-sock optval p2 p1 size - )   SOL_SOCKET SetSockOption ;
+
+: reuseaddr   ( sock - ) SO_REUSEADDR  -1 -1 cell SetSolOpt ;
 
 : Set_SO_Buf  { fileno-sock #units SO_Buf -- } \ SO_Buf= SO_RCVBUF or SO_SNDBUF
    cr ." Set_SO_Buf: " SO_Buf . #units .
@@ -433,32 +437,62 @@ cell newuser pMsStart
 5  constant SO_DONTROUTE
 254 constant /pad
 
+: open-port-socket  ( c-addr u port sock_ ipproto -- handle|0 )
+    swap >hints    \ Sets ai_socktype
+    AF_INET hints ai_family   l!
+            hints ai_protocol l!
+    get-info dup 0<>
+       if  get-socket
+       then
+     ;
+
 : open-upd-port   ( #server port - sock|0 )
    swap ipAdress$ rot SOCK_DGRAM IPPROTO_UDP
    open-port-socket  dup dup 0=
       if    drop
-      else  true blocking-mode  4 ms
+      else  dup fileno reuseaddr  true blocking-mode  4 ms
       then ;
 
-: SendUdp { msg$ cnt #server -- }
-   cnt /pad >
-      if    log" Message not send. > /pad" false
-      else  #server UdpPORT open-upd-port dup to #server  \ Uses: SOCK_DGRAM (UDP)
-             if   #server  fileno
-                  dup SO_DONTROUTE   -1 -1 cell SetSolOpt
-                      IP_PMTUDISC_DO -1 -1 cell SetSolOpt
-                 SOCK_CLOEXEC #server   SetMode
-                 msg$ cnt #server send-packet drop         \ Sends msg$
-                 #server close-socket
-             then
-      then ;
+: open#Webserver   ( #server|host-id - sock|ior )
+   dup  dup 100 <
+    if    r>port @ swap ipAdress$
+    else  drop 80 swap host-id>ip$  \ for esp-systems
+    then
 
-: accept-socket ( server -- asocket iaddr )
+   2dup +log
+   rot SOCK_STREAM IPPROTO_TCP open-port-socket ;
+
+\ A client for an other LOCAL tcp server:
+
+: open-#Webserver  ( #server - )  dup  open#Webserver  swap r>sock ! ;
+
+: (SendUdp)         ( msg$ cnt #server -- )
+        over /pad >
+            if    log" Message not send. > /pad" 3drop
+            else  UdpPORT open-upd-port dup  \ Uses: SOCK_DGRAM (UDP)
+                   if   dup >r fileno
+                        dup SO_DONTROUTE   -1 -1 cell SetSolOpt
+                            IP_PMTUDISC_DO -1 -1 cell SetSolOpt
+                        SOCK_CLOEXEC r@ SetMode
+                        r@ send-packet drop         \ Sends msg$
+                        r> close-socket
+                   else 3drop
+                   then
+            then ;
+
+: SendUdp         ( msg$ cnt #server -- )
+  CheckGateway
+    if    (SendUdp)
+    else  3drop drop log" No gateway."
+    then ;
+
+: accept-socket   ( server -- asocket iaddr )
     sockaddr_in alen !
     sockaddr-tmp alen accept()
+    dup reuseaddr
     dup ?ior SOCK_CLOEXEC over fd>file  SetMode   sockaddr-tmp 4 + @ ;
 
-: listen ( socket /queue -- )
+: listen          ( socket /queue -- )
    listen()
    0< if log" listen() failed"
       then ;
@@ -521,8 +555,7 @@ variable init-webserver-gforth-chain
      else   2drop false
      then  ;
 
-: ShutdownTCPConnection ( aSock - )
-    dup fileno ShutdownConnection  25 ms close-socket ;
+: ShutdownTCPConnection ( aSock - )  dup ShutdownConnection close drop ;
 
 : .LinuxError ( n - )
    -1 =
@@ -558,23 +591,24 @@ variable init-webserver-gforth-chain
 #-2130706456 constant wsPing-      \ The value is reserved for UdpSender.f
 
 : Send1WsPing ( #server - )
-   s" Send1WsPing @" here place dup (.) here +place  here count +log
+\   s" Send1WsPing @" here place dup (.) here +place  here count +log
    wsPing- (.) utmp$ place  space" +utmp$
    s"  wsping " +utmp$
    OwnIP$ count +utmp$
-   utmp" rot SendUdp 25 ms ;
+   utmp" rot (SendUdp) 25 ms ;
 
 : TcpPort? ( #server - flag ) r>port @ dup 8080 = swap 80 = or ;
 
 : PingTcpServers ( - )             \ See also -ArpToGforthServers
-   #servers  0
-     ?do  i TcpPort?               \ Filter ports 80 and 8080
-          if  i ServerHost <>      \ Exclude myself
-               if   i Send1WsPing
+  CheckGateway
+    if  log"  " #servers  0
+         ?do  i TcpPort?               \ Filter ports 80 and 8080
+               if  i ServerHost <>      \ Exclude myself
+                   if   i Send1WsPing
+                   then
                then
-          then
-     loop  log"  "
-      ;
+         loop
+     then ;
 
 : ClearTcpServers ( - )
    #servers  0
@@ -648,6 +682,7 @@ allocate-buffers
 : http-server ( port - )    \ Started by execute-task
    create-server dup to web-server-sock
    dup NoTcpDelay
+\   dup reuseaddr
    dup 255 listen
        0x400 SO_RCVBUF Set_SO_Buf
    log" Starting the connection loop"
@@ -661,10 +696,10 @@ allocate-buffers
                         if    dup handle-web-packet   \ aSock
                         else  log" IP-adress not allowed!"
                         then   [DEFINED]  fd>file
-                                  [if]    fd>file ShutdownTCPConnection
+                                  [if]    ShutdownTCPConnection
                                   [ELSE]  close-socket
                                   [THEN]
-                  else  2drop
+                  else 2drop
                   then  htmlpage$ off
       repeat 2drop  bye ;
 
@@ -705,20 +740,6 @@ false value tid-http-server
 : bye-page     ( - )
     <yellow-page SitesIndex
     +html| <br> <br> *** Bye, Forth *** <br>| IncludeSitelinks yellow-page> ;
-
-\ A client for an other LOCAL tcp server:
-
-
-
-: open#Webserver   ( #server|host-id - sock|ior )
-   dup  dup 100 <
-    if    r>port @ swap ipAdress$
-    else  drop 80 swap host-id>ip$  \ for esp-systems
-    then
-   2dup +log
-   rot SOCK_STREAM IPPROTO_TCP open-port-socket ;
-
-: open-#Webserver  ( #server - )  dup  open#Webserver  swap r>sock ! ;
 
 0 value #send
 3 constant #max-attempts           256 newuser UdpOut$
@@ -774,12 +795,22 @@ FORTH DEFINITIONS
    log" Bye, Forth." bye-page  send-last-packet
    s" sudo ./kf.sh" system ;
 
-: SendTcp ( msg$ cnt #server -- )      \ Using: SOCK_STREAM (TCP/IP)
-   >r s" TCP/IP: ---> " upad place   2dup +upad s"  @" +upad r@ (.) +upad  upad"  +log
-   r> open#Webserver dup 0=
-     if    3drop log" The receiver can not be reached."
-     else  dup>r send-packet drop r>  25 ms close-socket
-     then ;
+: (SendTcp) ( msg$ cnt #server -- )    \ No checks Using: SOCK_STREAM (TCP/IP)
+    >r s" TCP/IP: ---> " upad place   2dup +upad s"  @" +upad r@ (.) +upad  upad"  +log
+    r@ open#Webserver dup 0=
+       if    3drop r@ r>Online off
+             r>  (.) upad place s"  can not be reached." +upad" +log
+       else  dup>r fileno reuseaddr r@ send-packet drop r>  5 ms close-socket r> drop
+       then  ;
+
+ : SendTcp ( msg$ cnt #server -- )     \ With checks Using: SOCK_STREAM (TCP/IP)
+    CheckGateway
+      if  host-id>#server dup r>Online @
+          if   (SendTcp)
+          else  (.) upad place s"  is offline." +upad" +log 2drop
+          then
+      else  3drop drop log" No gateway."
+      then ;
 
 
 200 constant MsWaitTimeConfirmation    \ There schould be a response within 200 ms
@@ -812,18 +843,21 @@ FORTH DEFINITIONS
     s" -->" +upad ;
 
 : logRetryUdpMsg  { msg$ cnt #server -- flag }    \ EG: F0 on server 1 is sent as: F0 @1    xxx
-   msg$ cnt InitUdpOutMsg false
-   #max-attempts 1+ 1                      \ Depends on: >F0 of #server
-          do   i  (.) upad place s"  UDP: " +upad
-               #server Get#F0  LogFn
-               #server r>ipAdress count +upad space" +upad
-               UdpOut$ count  +upad  crlf" +upad" +log
-               UdpOut$ count #server SendUdp
-               #server WaitForF0
-                         if  drop true leave
-                         then
-          loop
-   0 #server Set#F0   ;
+    CheckGateway
+       if msg$ cnt InitUdpOutMsg false
+          #max-attempts 1+ 1                      \ Depends on: >F0 of #server
+                 do   i  (.) upad place s"  UDP: " +upad
+                      #server Get#F0  LogFn
+                      #server r>ipAdress count +upad space" +upad
+                      UdpOut$ count  +upad  crlf" +upad" +log
+                      UdpOut$ count #server SendUdp
+                      #server WaitForF0
+                           if  drop true leave
+                           then
+                 loop
+          0
+       else  true dup
+       then  #server Set#F0   ;
 
 : SendUdp$ ( msg$ cnt<240 #server --  )         \ Sending a msg and not waiting for a confirmation
     dup ServerHost <>                           \ Exclude myself
@@ -937,7 +971,7 @@ defer udp-requests  ( adr len --)
    UdpPORT  create-udp-server dup to Udp-server-sock
      begin  web-server-sock
      while  Udp-server-sock   udpin$ dup off
-            80 ['] read-udp-server catch 25 ms
+            80 ['] read-udp-server catch
                if      ." read-udp-server failed"  2drop
                else     dup 0>
                         if    2dup remove_seperators  2dup s" UDP In" LogRequest

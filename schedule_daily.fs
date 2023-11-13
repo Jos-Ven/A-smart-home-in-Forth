@@ -23,7 +23,6 @@ also html
       if    close-log-file  logFile" start-logfile
       then  ;
 
-
 : Reset-webserver_27th ( - )
     date-now 2drop RestartServerDay =
     if   RestartGforth  tid-http-server kill then    ;
@@ -54,6 +53,7 @@ TCP/IP DEFINITIONS
 ' noop alias /NewPage
 
 : /Schedule  ( - )  ['] Schedule-page set-page ;
+: /Scheduled  ( - ) clr-req-buf ['] Schedule-page set-page ;
 
 : SetEntrySchedule  ( id hh mm #DropDown - )
    SetEntry-schedule   /Schedule ;

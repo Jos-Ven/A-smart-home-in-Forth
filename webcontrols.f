@@ -460,16 +460,15 @@ $e7e7e7 constant ButtonWhite
    //HtmlPage  r@ read-file throw
    r> close-file throw  htmlpage$ +! ;
 
-
 : IncludeFile ( title$ cnt filename cnt - )
-   r/o bin open-file throw >r
+   r/w bin open-file throw >r
    (date) +html s" , " +html (time) +html 1 spaces$ +html  +html \ include the title
     +HTML| <pre>|  htmlpage$ lcount +   \ Start reading at
      r> LoadDataFile   +HTML| </pre>|
      <aHREF" +homelink +HTML| /home">| +HTML| Home| </a> ;
 
 : +hfile ( filename cnt - )
-   r/o bin open-file throw >r   htmlpage$ lcount +   r> LoadDataFile ;
+   r/w bin open-file throw >r   htmlpage$ lcount +   r> LoadDataFile ;
 
 : LoadHtmlFile ( title$ cnt filename cnt - )
    <yellow-page IncludeFile
@@ -589,13 +588,26 @@ $e7e7e7 constant ButtonWhite
 
 logFile" start-logfile  \ Start a logging.
 
-:  favicon.ico     ( - )
+0 value &favicon
+
+s" favicon.ico" r/o bin open-file throw
+dup dup file-size throw d>s dup cell+ allocate throw dup to &favicon  \ hdnl hndl size &favicon
+cell+ -rot swap read-file throw  swap close-file throw
+&favicon !   &favicon lcount
+
+:  0favicon.ico     ( - )
    htmlpage$ off
    s" favicon.ico" 2dup file-status nip
       if    +html +HTML|  missing.|
-      else  r/o bin open-file throw htmlpage$ off
+      else  r/w bin open-file throw htmlpage$ off
             htmlpage$ cell+ swap LoadDataFile
       then  ;
+
+
+
+:  favicon.ico     ( - )
+    &favicon lcount  htmlpage$ lplace ;
+
 
 also TCP/IP TCP/IP DEFINITIONS
 

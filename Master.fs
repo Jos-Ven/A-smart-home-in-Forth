@@ -238,8 +238,10 @@ Needs SetVersionPage.fs
   s" IPtable"  4 <<UpdateButtonOption>>
   s" Reboot"   5 <<UpdateButtonOption>>
   s" Shutdown" 6 <<UpdateButtonOption>>
+  s" TimeSync"   <<UpdateButton>>
+       <tdL> HTML| Time sync. to network| +HtmlNoWrap </td></tr>
   s" Execute"    <<UpdateButton>>
-  <tdL> HTML| Execute the linux script on this system. | +HtmlNoWrap </td></tr> ;
+       <tdL> HTML| Execute the linux script on this system. | +HtmlNoWrap </td></tr> ;
 
 : AdminLink    ( - ) <aHREF" +homelink  +HTML| /Admin ">|  +HTML| Administration | </a> ;
 
@@ -292,6 +294,15 @@ Needs SetVersionPage.fs
      date-now sunset  +fd>Udp-line2$
    s" TcpTime HTTP/1.1" UdpOut$ +place
    UdpOut$ count rot  SendTcp ;
+
+: SendTCPTimesyncToAll ( - )
+    #servers 0
+       do  i r>Online @
+             if  i ServerHost <>
+                   if   i SendTCPTimesync
+                   then
+             then
+       loop ;
 
 : CopyIpTable ( - ) s" cp ip_table.bin ip_table.fbin" system ;
 
@@ -384,6 +395,7 @@ TCP/IP DEFINITIONS \ Adding the requests to the tcp/ip dictionary
 : RebootUpdateHit 		( - ) s" ./upd_reboot.sh"   5 WriteNupdate.sh ;
 : ShutdownUpdateHit		( - ) s" ./upd_shutdown.sh" 6 WriteNupdate.sh  ;
 : ExecuteUpdateHit		( - ) s" bash ./nupdate.sh >./nupdate.log" system  ;
+: TimeSyncUpdateHit             ( - ) SendTCPTimesyncToAll /admin ;
 
 : Gforth::State			( - )
      udpin$ lcount
@@ -409,7 +421,7 @@ TCP/IP DEFINITIONS \ Adding the requests to the tcp/ip dictionary
 
 : ask_time ( host-id - )
    dup 256 <=
-    if    SendTCPTimesync
+    if    dup host-id>#server r>Online on SendTCPTimesync
     else  drop log" Invalid host-id"
     then ;
 

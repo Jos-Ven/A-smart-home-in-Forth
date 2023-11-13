@@ -21,7 +21,6 @@ ConfigVariable FlashUpd
 ConfigFile$ count file-exist? not
 EnableConfigFile
 
-
 S" gforth" ENVIRONMENT? [IF] 2drop
 
  s" Documents/MachineSettings.fs" file-status nip 0= [if]
@@ -42,6 +41,11 @@ S" win32forth" ENVIRONMENT? [IF] DROP
 
 needs Web-server-light.f
 
+: open#Webserver   ( #server - sock|ior )
+   dup ipAdress$ 2dup +log
+   rot r>port @  SOCK_STREAM IPPROTO_TCP open-port-socket ;
+
+: open-#Webserver  ( #server - )  dup  open#Webserver  swap r>sock ! ;
 
 \ ---- Start server configuration ---------------------------------------------------------------
 \ --- Servertypes:

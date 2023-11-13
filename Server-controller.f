@@ -9,8 +9,6 @@ S" win32forth" ENVIRONMENT? [IF] DROP
 include itools.frt
 0x8 constant MSG_WAITALL
 
-0x8 constant MSG_WAITALL
-
 : host>addr ( addr u -- x|0 )
     2dup upad place upad +null
     upad 1+ gethostbyname dup 0=
@@ -197,16 +195,16 @@ end-c-library
     \ log" Can't connect"  \ Optional
     0 ;
 
+
 : open-port-socket  ( c-addr u port sock_ ipproto -- handle|0 )
     swap >hints    \ Sets ai_socktype
     AF_INET hints ai_family   l!
             hints ai_protocol l!
     get-info dup 0<>
-       if  get-socket dup
-            if   dup reuse-addr
-            then
+       if  get-socket
        then
      ;
+
 
 [undefined] strlen [if]
 : strlen ( addr -- count )
@@ -403,6 +401,11 @@ S" gforth" ENVIRONMENT? [IF] 2drop
     to ServerHost
     cr ." Subnet$: " SetSubnet subnet$ count type cr ;
 
+: host-id>#server ( #server|host-id -  #server )
+   dup 99 >
+     if   host-id>ip$ FindServer#
+     then ;
+
 [THEN]
 
 
@@ -444,6 +447,7 @@ S" gforth" ENVIRONMENT? [IF] 2drop
      then     ( filename$ count - fd )
    ['] FileIp ForAllServers
    CloseFile ;
+
 
 \s
 

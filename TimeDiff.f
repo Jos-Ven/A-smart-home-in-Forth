@@ -1,4 +1,4 @@
-Marker TimeDiff.f \ For Gforth and Win32Forth. By J.v.d.Ven 17-09-2023
+Marker TimeDiff.f \ For Gforth and Win32Forth. By J.v.d.Ven 01-08-2023
 
 \ Time specifications like  ( ss mm uu JD -  ) are in UTC
 \ unless otherwise indicated like: ( hhmmTargetLocal -- ) or ( f: UtcTics - ss mm uu dd mm yearLocal )

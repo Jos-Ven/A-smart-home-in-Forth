@@ -21,13 +21,22 @@ cr .(  Extra options that can be activated by deleting the backslash before the 
 \ MARKER WiFiBitSignal  .latest \ Overwrites ldr data with the signal level of the WiFi connection in the graph.
 \ MARKER DisableUpdServer  .latest \ For applications that uses a special udp-server like in  _UploadServer.f
 cr
+0 [if]
 
+: WiFiBitRate@|Mq135f@  ( - f )
+   [DEFINED] WiFiBitRate
+   [IF]    WiFiBitRate@
+   [ELSE]  Mq135f@
+   [THEN]  ;
+
+
+[THEN]
 
 
 [defined] AdminPage     [IF] Needs Master.fs  [ELSE] needs slave.fs  [THEN]
 
 
-120 constant MinutesBeforeSunSet \ After which it can trigger a LightsOn msg ( Needs LDR )
+30 constant MinutesBeforeSunSet \ After which it can trigger a LightsOn msg ( Needs LDR )
 true value StandBy-
 
 \ GPio pins:
@@ -596,7 +605,7 @@ coded char - negate + dup 1 3  >floorItem ! 1 4  >floorItem !
      [DEFINED] Master.fs [IF]
                <br> +HTML| Loggings: | LogLinks [THEN]
            <br>
-           +Arplink  s" /UpdateLinks" Sitelinks
+           +Arplink  s" /Home" Sitelinks
     </td></tr> </table> </fieldset> ;
 
 : BuildHtmlPage  ( -- )
@@ -739,7 +748,7 @@ create &Bme280Data 200 allot
 
 
 0  constant  LdrDataReceiver    \ Server that gets the Ldr Data
-2.0e fconstant MinimalLdr      \ When the LDR gets below MinimalLdr \ was 1.8
+2.2e fconstant MinimalLdr      \ When the LDR gets below MinimalLdr \ was 1.8
 0 value LowLightLevelsent
 
 cr .( Ldr:) Ldrf@% f.
@@ -751,7 +760,7 @@ cr .( Ldr:) Ldrf@% f.
           else  log" Failed."
           then  true to LowLightLevelsent
           Ldrf@% (f.2) +log
-          0001 WaitUntil  0 to LowLightLevelSent   log" Reset LowLightLevelSent" 
+          0001 WaitUntil  0 to LowLightLevelSent   log" Reset LowLightLevelSent"
     else  drop
     then ;
 

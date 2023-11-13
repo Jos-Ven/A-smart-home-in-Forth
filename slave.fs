@@ -133,10 +133,14 @@ defer SosLayout
     <tr> 2 <#tdL>  .ErrorWebApp  </td></tr>
     <EndHtmlLayout> ;
 
+also tcp/ip
+
 : ClearArpTable ( - )
    log" ClearArpTable " s" sudo ip neigh flush all" system
+   /UpdateLinks
    ['] PingTcpServers execute-task drop ;
 
+previous
 
 : gflogSlv ( - )
     SosLayout  <tr> 2 <#tdL>  GfLogs  </td></tr>
@@ -228,7 +232,8 @@ tcp/ip definitions
 : -arp		( <ip4> - )  parse-name RemoveFromArp Ignore-remainder ;
 : /RebuildArpTable  ( - ) ClearArpTable  /ArpPage  ;
 
-: PingReply	( AnswerWsPingCode - ) drop Ignore-remainder ; \ For the ARP-table
+: PingReply	( AnswerWsPingCode - )
+   drop  true   parse-name FindServer#  r>Online ! ; \ For the ARP-table
 
 : wsping	( wsping- <ip4> - ) drop parse-name AnswerWsPing Ignore-remainder ; \ The OS needs some traffic for the ARP-table
 

@@ -35,7 +35,6 @@ needs unix/mmap.fs
 ' name>string alias >name$
 
 255 constant maxcounted
-maxcounted 1+ newuser upad    \ needs to be multi user from this point
 create spcs  maxcounted allot
 spcs         maxcounted blank
 synonym      cls        page
@@ -47,7 +46,7 @@ synonym      cls        page
 maxcounted 1+ newuser utmp$
 0 value hLogfile
 maxcounted 1+ newuser log-line$
-
+maxcounted 1+ newuser upad    \ needs to be multi user from this point
 
 : utmp"   ( - addr cnt )          utmp$ count ;
 : +utmp$  ( adr cnt -  )         utmp$ +place ;
@@ -276,14 +275,14 @@ s" /sys/class/leds/led1/brightness" file-status nip \ led1 does not exist on a R
     s" Free mem: " GetFreeMem" $concat 2drop s"  MB" +upad  upad"  ;
 
 
-\ : drop_caches ( - )   \  Use  drop_caches.sh
-\    FreeMem" +log
-\   s" sudo sh -c  sync" system
-\   s" sudo sh -c 'echo 1 >/proc/sys/vm/drop_caches'" system
-\   s" sudo sh -c 'echo 2 >/proc/sys/vm/drop_caches'" system
-\   s" sudo sh -c 'echo 3 >/proc/sys/vm/drop_caches'" system
-\   log" ready"
-\    FreeMem" +log ;
+: drop_caches ( - )   \
+    FreeMem" +log
+   s" sudo sh -c  sync" system
+   s" sudo sh -c 'echo 1 >/proc/sys/vm/drop_caches'" system
+   s" sudo sh -c 'echo 2 >/proc/sys/vm/drop_caches'" system
+   s" sudo sh -c 'echo 3 >/proc/sys/vm/drop_caches'" system
+   log" ready"
+   FreeMem" +log ;
 
 [THEN]
 

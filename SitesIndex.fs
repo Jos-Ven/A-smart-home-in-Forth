@@ -118,7 +118,7 @@ create ShowActivity$ 12 allot s" Pc" ShowActivity$ place
     <td> Links-to-pages   </td>
     <tr> +HTML| <td align="left" valign="bottom">|
             +HTML| Favorites: |
-            s" https://groups.google.com/g/comp.lang.forth" s" Clf"           <<TopLink>> .HtmlSpace
+            s" https://www.novabbs.com/devel/thread.php?group=comp.lang.forth" s" Clf" <<TopLink>> .HtmlSpace
             s" https://www.facebook.com/"                   s" Faceb."            <<TopLink>> .HtmlSpace
             s" https://github.com/Jos-Ven?tab=repositories" s" Git JV"        <<TopLink>> .HtmlSpace
             s" https://www.rosettacode.org/wiki/Category:Forth" s" Rosetta Forth" <<TopLink>> .HtmlSpace

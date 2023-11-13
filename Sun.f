@@ -242,7 +242,7 @@ true constant setting
 : wait-time-sun ( f: UtcTics -- UtcTicsTimeDif ) ( - flag  )  @time till-next-time ;
 
 : sunset-still-today?  ( - minutes flag )
-   date-now sunset LocalTics-from-UtcTics wait-time-sun not f>s 60 / swap ;
+   date-now sunset wait-time-sun not f>s 60 / swap ;
 
 : .wait-time-sun ( f: UtcTics -- flag )
    fdup  wait-time-sun
