@@ -159,7 +159,7 @@ end-c-library
             then
       then  ;
 
-: ShutdownConnection ( fileno - )  SHUT_RDWR shutdown drop ;
+: ShutdownConnection ( fileno - )  SHUT_WR shutdown drop ;
 
 : close-socket       ( socket -- )
    dup 0<>

@@ -1,4 +1,4 @@
-\ 14-07-2023 A web server by J.v.d.Ven.
+\ 15-11-2023 A web server by J.v.d.Ven.
 
 0 [if]
 
@@ -21,7 +21,8 @@ Last tested under:
             - Renamed: <#tdC      to <#tdC>     <#tdL to <#tdL>   <#tdR to <#tdR>
                        <<option>> to <option>   .<<option>> to <<option-cap>>
             - Added a schedule with a web-gui for a Daily_schedule
-
+13-11-2023  - Moved the project to https://github.com/Jos-Ven/A-smart-home-in-Forth
+            - Changes are now logged on Git.
 [then]
 
 needs Common-extensions.f
@@ -194,13 +195,14 @@ synonym Add/Tmp/Dir noop
 
 
 : handle-web-packet ( aSock - )
-     dup aSock ! wait-for-packet crlf"  write-log-line  timer-reset dup
-        if  aSock @  req-buf rot /req-buf min read-packet 0=
+     dup aSock !
+         wait-for-packet crlf"  write-log-line  timer-reset dup
+         if  aSock @  req-buf rot /req-buf min read-packet 0=
                  if     html-responder
                  else   2drop log" read-packet failed."
                  then
-        else   s" 0 packet detected." +log drop
-        then
+         else   s" 0 packet detected." +log drop
+         then
    elapsed LogElapsed$
  ;
 
@@ -437,15 +439,6 @@ cell newuser pMsStart
 5  constant SO_DONTROUTE
 254 constant /pad
 
-: open-port-socket  ( c-addr u port sock_ ipproto -- handle|0 )
-    swap >hints    \ Sets ai_socktype
-    AF_INET hints ai_family   l!
-            hints ai_protocol l!
-    get-info dup 0<>
-       if  get-socket
-       then
-     ;
-
 : open-upd-port   ( #server port - sock|0 )
    swap ipAdress$ rot SOCK_DGRAM IPPROTO_UDP
    open-port-socket  dup dup 0=
@@ -572,8 +565,12 @@ variable init-webserver-gforth-chain
         4 ms
    loop  req-buf ! req-buf lcount ;
 
+: linger-tcp ( fileno - )  SO_LINGER 1 sp@ 2 cells SetSolOpt ;
+
 : handle-web-packet ( aSock - )
-   dup fd>file aSock ! recv_tcp
+   dup fd>file  aSock !
+   dup linger-tcp
+       recv_tcp
    2dup Confirmations?
       if     2drop  log" confirmation packet."
       else   dup 0=
@@ -681,6 +678,7 @@ allocate-buffers
 
 : http-server ( port - )    \ Started by execute-task
    create-server dup to web-server-sock
+    \ .s quit
    dup NoTcpDelay
 \   dup reuseaddr
    dup 255 listen
@@ -800,7 +798,9 @@ FORTH DEFINITIONS
     r@ open#Webserver dup 0=
        if    3drop r@ r>Online off
              r>  (.) upad place s"  can not be reached." +upad" +log
-       else  dup>r fileno reuseaddr r@ send-packet drop r>  5 ms close-socket r> drop
+       else  dup>r fileno  dup reuseaddr linger-tcp
+             SOCK_CLOEXEC r@ SetMode
+             r@ send-packet drop r>  close-socket r> drop
        then  ;
 
  : SendTcp ( msg$ cnt #server -- )     \ With checks Using: SOCK_STREAM (TCP/IP)

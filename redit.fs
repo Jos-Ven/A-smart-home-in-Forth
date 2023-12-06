@@ -24,7 +24,7 @@ needs bme280-logger.fs
 needs bme280-output.fs
 
 yearToday  SetFilename \ Will set the filename to the current year
-\ 2016 SetFilename     \ Could be changed.
+\ 2022 SetFilename     \ Could be changed.
 
 : n>a   ( #N - Vadr ) \ Finds the adress for the Nth record in a mapped file.
   /bme280Record * &bme280-FileRecords @ +  ;
@@ -108,7 +108,7 @@ map-handle mhndl-file
     do   I dup to iptr  0e r>Light f!
     loop ;
 
-: .frec ( date time - ) \ find recored filled with date time. EG: 20171031 2301
+: .frec ( date time - ) \ find recored filled with date time. EG: 20231101 301 .frec
     locals| _time _date |  \ And stores the found record number in iptr
     mhndl-file >hfileLength @
     /bme280Record / 0
@@ -137,7 +137,6 @@ map-handle mhndl-file
     then
   mhndl-file >hfileLength @  /bme280Record - ResizeFile ;
 
-
 : SetRec { adr } ( time date addr - ) ( f: Humidity Temperature Pressure - )
   adr >Date !  adr >Time ! s" patch" adr >Location place
   adr >Pressure f! adr >Temperature f! adr >Humidity f! ;
@@ -164,6 +163,9 @@ end-structure
 : #bme280records ( -- #recordsInFile )        \ including the record at 0
    mhndl-file >hfileLength @  /bme280Record / ;
 
+: cut#recsFromEnd ( #records - ) \  EG: 2080 cut#recsFromEnd
+   #bme280records swap - /bme280Record * ResizeFile ;
+
 : ExportRecords ( hndl &End &start - )
      do   i loadNewRecord dup WriteNewRecord  /bme280Record
      +loop
@@ -186,11 +188,11 @@ maplog \ Map the file
 \\\
 
 EG after a a file has been mapped:
-+l 20 xl
--l 20 xl
++l 190 xl
+-l 10 xl
 delrec 4l
 
 .0rec 4l
-20161205 1406 .frec 4l
+20231115 318 .frec 2 xl
 
 \\\

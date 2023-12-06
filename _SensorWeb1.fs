@@ -748,7 +748,7 @@ create &Bme280Data 200 allot
 
 
 0  constant  LdrDataReceiver    \ Server that gets the Ldr Data
-2.2e fconstant MinimalLdr      \ When the LDR gets below MinimalLdr \ was 1.8
+1.6e fconstant MinimalLdr      \ When the LDR gets below MinimalLdr \ was 1.8
 0 value LowLightLevelsent
 
 cr .( Ldr:) Ldrf@% f.

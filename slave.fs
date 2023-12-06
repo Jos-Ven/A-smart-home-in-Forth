@@ -258,7 +258,8 @@ tcp/ip definitions
      s"  L" +utmp$ 5mLoadAvg 100e f* f>s     (.) +utmp$
      utmp" AdminServer 0 max SendUdp$ Ignore-remainder ;
 
-:  Gforth_UpdateSignal  ( - )   UpdateThisSystem ;  \ Update this client from Forth through sock.
+:  Gforth_UpdateSignal  ( - )
+    UpdateThisSystem Ignore-remainder ;  \ Update this client from Forth through sock.
 
 
 FORTH DEFINITIONS PREVIOUS
