@@ -917,7 +917,6 @@ TCP/IP DEFINITIONS
    log" Shuttingdown"  shutdownpage  htmlpage$ lcount aSock @
    -rot make-packet rot send-packet
    -ArpToGforthServers
-    aSock fileno ShutdownConnection
    down quit ;
 
 : DoReboot ( - )

@@ -230,7 +230,7 @@ tcp/ip definitions
 
 : /ArpPage	( - ) ['] ArpPage    set-page ;
 : -arp		( <ip4> - )  parse-name RemoveFromArp Ignore-remainder ;
-: /RebuildArpTable  ( - ) ClearArpTable  /ArpPage  ;
+: /RebuildArpTable  ( - )  ClearArpTable  /ArpPage ;
 
 : PingReply	( AnswerWsPingCode - )
    drop  true   parse-name FindServer#  r>Online ! ; \ For the ARP-table

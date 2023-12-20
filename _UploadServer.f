@@ -1,5 +1,5 @@
 needs Common-extensions.f \ See domotica_vX.zip at http://home.kpn.nl/~josv on the smart home page
-cr marker _UploadServer.f  bl emit .latest .(  17-07-2023 )      \ by J.v.d.Ven.
+cr marker _UploadServer.f  bl emit .latest .( 17-12-2024 )      \ by J.v.d.Ven.
 
 0 [IF]
 This makes it possible to upload sources to the file system of an ESP32 or ESP12F.
@@ -106,7 +106,12 @@ needs UdpSender.f
    <td> <form>
          ButtonWhite  Black s" Reboot"        nn" <StyledButton>
    </form> </td> </tr>
-         <tr><tdL> s" File: "  +HtmlNoWrap     </td>
+         <tr><tdL>  s" File "  +HtmlNoWrap
+          HTML| <a target="_blank" rel="noopener noreferrer" href="http://| upad place
+                flash-to$ lcount +upad  s" :" +upad RemotePort (.) +upad
+                HTML| /update">| +upad s" Rem: " +upad  HTML| </a>| +upad
+                upad  count  +Html
+          </td>
               <tdL> s" SavFileNo" 1 <SELECT  AddFileOptions  </SELECT> </td> <td>
     <form> ButtonWhite  Black s" < UpdateList"  nn" <StyledButton>
     </form> </td></tr>
@@ -211,6 +216,7 @@ TCP/IP DEFINITIONS ALSO HTML
 
 : Send ( - )  PushFlash  ; \ Pushes the involved file size and targeted sector to the client
 : Load ( - )  LoadOnESP ;
+
 
 : /udp  ( #rec n - ) ['] DoDropped  set-page ; \ To sent a dropped packet
 : /udpf ( - )        ['] DoSendFile set-page postpone \ ; \ To transfer the file

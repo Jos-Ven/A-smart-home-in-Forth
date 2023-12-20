@@ -313,7 +313,7 @@ Needs SetVersionPage.fs
                if   s" GET /RebuildArpTable" i SendUdp \ SendUdp$
                then
           then
-     loop log" " ClearArpTable ;
+     loop log" " ;
 
 
  s" # None" s" nupdate.sh" fsearch nip not

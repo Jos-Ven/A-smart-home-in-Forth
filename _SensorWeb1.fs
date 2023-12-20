@@ -755,7 +755,7 @@ cr .( Ldr:) Ldrf@% f.
 
 : SendLowLightLevel ( Server# - )
    Ldrf@% MinimalLdr f<
-    if    s" Gforth::LowLight" rot SendConfirmUdp$
+    if    s" /UpdateLinks  Gforth::LowLight" rot SendConfirmUdp$
           if    log" SendLowLightLevelOnce done."
           else  log" Failed."
           then  true to LowLightLevelsent

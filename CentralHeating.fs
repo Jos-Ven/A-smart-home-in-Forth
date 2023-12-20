@@ -35,7 +35,7 @@ variable  Enter-Timespan
 : .y|n            ( flag - )  if  +HTML| Y| else +HTML| N| then ;
 
 : GetStartParams ( f: - @time  StartTimeOutTempLimitTics)
-    @time StartTimeOutTempLimit @ UtcTics-from-hm  ;
+    @time LocalTics-from-UtcTics StartTimeOutTempLimit @ UtcTics-from-hm  ;
 
 : OpeningHours-   ( - flag ) \ For nightmode
    GetStartParams  EndTimeOutTempLimit @ UtcTics-from-hm fbetween ;
