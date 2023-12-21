@@ -155,9 +155,10 @@ end-c-library
                      then
                loop
             size dup 0<
-            if    cr .time cr c-addr 200 dump  log" Write error to sock."
+            if   log" Write error to sock."
             then
       then  ;
+
 
 : ShutdownConnection ( fileno - )  SHUT_WR shutdown drop ;
 
