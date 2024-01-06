@@ -194,7 +194,7 @@ false value S5? \ to detect my S5
       34 to BottomMargin 12 to RightMargin  52 to LeftMargin
       <tr><td> GraphHum   </td>
           <td> GraphLight </td>
-          Pollution- if  <td> GraphPol   </td> then </tr>
+          Pollution-  bInput@ if  <td> GraphPol   </td> then </tr>
       <tr><td> GraphPres  </td>
           <td> GraphTemp  </td>
           <td> .ShortAbstract 2<br> .GforthDriven_  </td></tr>
@@ -202,7 +202,7 @@ false value S5? \ to detect my S5
 
 : DetectS5 ( webpacket$ cnt - ) req-buf lcount s" Safari/534.30" search to S5? 2drop ;
 
-: Dynpage ( w h xt -  )
+: Dynpage ( w h xt -  ) 
    >r MapBme280Data 2>r DetectS5 GetViewport $0 to ColorOff   RefreshCmd
     +HTML|  <body style="background-color:#000000">|
     WidthViewPort 90 %  HeightViewPort 75 % 0 0 0 <tablePx> S5?  \ The Outer table. One cell is used

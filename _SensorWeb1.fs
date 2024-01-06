@@ -37,7 +37,6 @@ cr
 
 
 30 constant MinutesBeforeSunSet \ After which it can trigger a LightsOn msg ( Needs LDR )
-true value StandBy-
 
 \ GPio pins:
 needs wiringPi.fs          \ From: https://github.com/kristopherjohnson/wiringPi_gforth
@@ -47,12 +46,19 @@ needs gpio.fs              \ To control and administer GPio pins
 
 \ Added devices:
 needs resetbutton.fs       \ In case the system hangs
+needs multiport_gate.f
 
-true value Humidity-
-true value Light-
-True value Pollution-
-true value Pressure-
-true value Temperature-
+variable Graphic-flags
+0 Graphic-flags bInput: Humidity-
+                bInput: Light-
+                bInput: Pollution-
+                bInput: Pressure-
+                bInput: Temperature-
+                bInput: Compression- 2drop
+
+true Graphic-flags !
+
+
 2 value RightLabel
 
 CheckI2c [IF]
@@ -62,11 +68,13 @@ CheckI2c [IF]
 
 
 fdBme280 ChipId@ 0<= [IF]
-   false to Humidity-
-   false to Pressure-
-   false to Temperature-
+   Humidity-    bInputoff
+   Pressure-    bInputoff
+   Temperature- bInputoff
    3     to RightLabel
- MARKER WiFiBitRate    .latest
+ [UNDEFINED] WiFiBitRate
+    [IF]  MARKER WiFiBitRate    .latest
+    [THEN]
  MARKER WiFiBitSignal  .latest
 [THEN]
 
@@ -76,7 +84,9 @@ CheckSPI [IF]
  needs ldr.fs              \ For light intensity through the ADC at channel 0
        [defined] NegateLdr [IF] ' LdrNeg@ is Ldr@  [THEN]
 [ELSE]
- MARKER WiFiBitRate    .latest
+ [UNDEFINED] WiFiBitRate
+    [IF]  MARKER WiFiBitRate    .latest
+    [THEN]
  MARKER WiFiBitSignal  .latest
 [THEN]
 
@@ -185,8 +195,7 @@ ALSO HTML
   [DEFINED] WiFiBitRate
    [IF]   +HTML| Bit rate.|
    [ELSE] +HTML| Poll.|
-   [THEN]
- ;
+   [THEN] ;
 
 : .LabelLine  ( - )
     <td> <form>
@@ -204,36 +213,38 @@ ALSO HTML
     </td>
     <tdL>   s" Right label" nn" <button> </td> </form> ;
 
-false value Compression-
-
 : .Compression  ( - )
     <td> </td> <form>
-     Compression- <tdFlag>  s" Compression" nn" <button> </td> </form> ;
+     Compression- bInput@ <tdFlag>  s" Compression" nn" <button> </td> </form> ;
 
-: NoneSlected?       ( -- f )  Humidity-  Light- or Pollution- or Pressure- or  not ;
+: NoneSlected?       ( -- f )
+\   Humidity- bInput@  Light- bInput@ or Pollution- bInput@ or Pressure- bInput@ or not
+   [ Humidity- activated-bit#   Light- activated-bit#
+     Pollution- activated-bit#  Pressure- activated-bit# or or or ] literal
+    Graphic-flags @ and not ;
 
 : .Included)  ( - )
     NoneSlected?
-      if true to Temperature-
+      if  Temperature- bInputOn
       then
     +HTML| <td colspan="2"> | <form> <fieldset> s" Include" <<legend>> <center>
-    Humidity-
+    Humidity-  bInput@
       if    &Humidity    >Color @ 0x555500 +
       else  ButtonWhite
       then  black s" Humidity"    nn" <StyledButton> .HtmlSpace
-    Light-
+    Light-  bInput@
       if    &Light       >Color @
       else  ButtonWhite
       then  black  Light"         nn" <StyledButton> .HtmlSpace White 1  <hr>
-    Pollution-
+    Pollution-  bInput@
       if    &Pollution   >Color @
       else  ButtonWhite
       then  black Pollution"      nn" <StyledButton> .HtmlSpace
-    Pressure-
+    Pressure-  bInput@
       if    &Pressure    >Color @
       else  ButtonWhite
       then  black s" Pressure"    nn" <StyledButton> .HtmlSpace White 1  <hr>
-    Temperature-
+    Temperature-  bInput@
       if    &Temperature >Color @
       else  ButtonWhite
       then  black s" Temperature" nn" <StyledButton>
@@ -433,7 +444,6 @@ coded char - negate + dup 1 3  >floorItem ! 1 4  >floorItem !
 
 : (+.Inside) ( - )    GetTemperature +HTML| Inside: |  (n.1) +html <br-space> ;
 
-
 : .Abstract ( - )
     <fieldset> s" Floor sensors" <<legend>>
     100 40 0 3 1 <table> FloorHeader  FloorData  </table>
@@ -489,24 +499,24 @@ coded char - negate + dup 1 3  >floorItem ! 1 4  >floorItem !
      65 to BottomMargin   57 to RightMargin  65 to BottomMargin
       InitSvgPlot >r
       #X_Lines dup 1- r@ *  s>f to MaxXtop  #Max_Y_Lines   SetGrid
-      r@  Light-
+      r@  Light- bInput@
              if   DupPdata    &Light    PlotDataLine   LabelLight     ?y-labels-right
              then
-          Humidity-
+          Humidity-  bInput@
              if   DupPdata    &Humidity PlotDataLine   LabelHumidity  ?y-labels-right
              then
-          Temperature- NoneSlected? or
+          Temperature- bInput@ NoneSlected? or
              if   DupPdata &Temperature PlotDataLine
                     -4 3 Red ['] Anchor-Justify-right  y-labels       \ y-labels left side
              then
-          Pollution-
+          Pollution-  bInput@
              if   DupPdata    &Pollution PlotDataLine
-                  Temperature- NoneSlected? or not
+                  Temperature- bInput@ NoneSlected? or not
                         if    -4 3 DkGreen ['] Anchor-Justify-right  y-labels       \ y-labels left side
                         else  LabelPollution ?y-labels-right
                         then
              then
-          Pressure-
+          Pressure-  bInput@
              if    DupPdata   &Pressure  PlotDataLine   LabelPressure  ?y-labels-right
              then
       drop
@@ -528,7 +538,7 @@ coded char - negate + dup 1 3  >floorItem ! 1 4  >floorItem !
 
 
 : InitDataParms ( - )
-   Compression- \ drop 0
+   Compression- bInput@ \ drop 0
       if   1.08e 1e 1.02e 1.02e 1.0001e
       else 1e 1e 1e 1e 1e
       then
@@ -595,7 +605,7 @@ coded char - negate + dup 1 3  >floorItem ! 1 4  >floorItem !
      [DEFINED] Master.fs  [IF]
                AdminLink .HtmlSpace  [THEN]
 
-     [DEFINED] CentralHeating.fs  [IF]
+     [DEFINED] CentralHeating  [IF]
                <aHREF" +homelink  +HTML| /CV menu ">|
                +HTML| Central heating | </a> .HtmlSpace [THEN]
 
@@ -764,11 +774,13 @@ cr .( Ldr:) Ldrf@% f.
     else  drop
     then ;
 
+i_Present bInputoff
+
 : SendLowLightLevelOnceAfter ( - )
    LowLightLevelsent  0=
     if   sunset-still-today?
       if MinutesBeforeSunSet <
-             if  StandBy- not
+             if  i_Present bInput@
                     if  log" LowLightLevelTime"  LdrDataReceiver  SendLowLightLevel
                     then
              then
@@ -919,8 +931,6 @@ HumidityDecreaseTimeSpan HumidityIncreaseTimeSpan 1 + max constant #minmalFiledR
 [then]
 
 
-
-
 : Send-recv-pkt ( recv-pkt$ cnt  - recv-pkt$ cnt   )
    log" Server: N/A. Sending the received packet."  ;
 
@@ -946,12 +956,10 @@ cr .( Starting the support jobs )  \ Receiving servers should be adapted
 
 : (KillTasks ( - )
      [DEFINED] SendingState        [IF] Tid-Send-Floor-job       kill [THEN]
-     [DEFINED] CentralHeating.fs   [IF] TidJobNightService       kill [THEN]
+     [DEFINED] CentralHeating      [IF] TidJobNightService       kill [THEN]
      [DEFINED] PushBme280Data      [IF] TidJobSendBme280         kill [THEN]
      [DEFINED] WarningLight        [IF] TidJobSentToWarningLight kill [THEN]
-     [DEFINED] LowLightLevel       [IF] TidJobSendLowLightLevel  kill [THEN]
-
- ;
+     [DEFINED] LowLightLevel       [IF] TidJobSendLowLightLevel  kill [THEN] ;
 
 ' (KillTasks is KillTasks
 
@@ -972,14 +980,14 @@ TCP/IP DEFINITIONS \ Adding the page and it's actions to the tcp/ip dictionary
 : RadHum   ( - ) 2 to RightLabel ;
 : RadLight ( - ) 3 to RightLabel ;
 
-: Humidity     ( - )   Humidity-    not to Humidity-    ;
-: Light        ( - )   Light-       not to Light-       ;
-: Pollution    ( - )   Pollution-   not to Pollution-   ;
-: Pressure     ( - )   Pressure-    not to Pressure-    ;
-: Temperature  ( - )   Temperature- not to Temperature- ;
+: Humidity      ( - )   Humidity-    invert-bit-input ;
+: Light         ( - )   Light-       invert-bit-input ;
+: Pollution     ( - )   Pollution-   invert-bit-input ;
+: Pressure      ( - )   Pressure-    invert-bit-input ;
+: Temperature   ( - )   Temperature- invert-bit-input ;
 : Signal%C2%A0level ( n - ) Light ;
 : Bit%C2%A0rate ( n - ) Pollution ;
-: Compression  ( - )   Compression- not to Compression- /home  ;
+: Compression   ( - )   Compression- invert-bit-input /home  ;
 
 : /BodyCombinedPlots ( - 'BodyCombinedPlots ) ['] BodyCombinedPlots ;
 : /BodySeparatePlots ( - 'BodySeparatePlots ) ['] BodySeparatePlots ;
@@ -988,7 +996,7 @@ TCP/IP DEFINITIONS \ Adding the page and it's actions to the tcp/ip dictionary
 : Ask_HumidityStandBy ( host-id - )
    cr dup . ." HumidityStandBy "
    &bme280Record >Humidity f@ 100.e f* f>s (.) tmp$ place s"  " tmp$ +place
-   StandBy- (.) tmp$ +place
+   i_Present bInput@ not (.) tmp$ +place
    s"  HumidityStandBy"  tmp$ +place
    tmp$ count rot SendTcp ;
 

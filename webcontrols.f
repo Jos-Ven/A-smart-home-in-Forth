@@ -1,8 +1,9 @@
-marker webcontrols.f          \ 31-05-2023 webcontrols.f by J.v.d.Ven
+marker webcontrols.f          \ 31-12-2023 webcontrols.f by J.v.d.Ven
 Needs  Web-server-light.f     \ Contains the htmlpage$ buffer
 Needs TimeDiff.f
 
 \ Tags added to the buffer in htmlpage$:
+\ <InputTime> adapted for the latest: https://html.spec.whatwg.org/multipage/input.html
 
 VOCABULARY HTML also HTML HTML DEFINITIONS \ For all html controls/tags
 
@@ -96,6 +97,7 @@ VOCABULARY HTML also HTML HTML DEFINITIONS \ For all html controls/tags
 
 : <<td>>     ( str cnt - )     <td> +html </td> ;
 : <<strong>> ( str cnt - ) <strong> +html </strong> ;
+: <<label>> ( label-name - ) +HTML| <label for="| +HTML  +HTML| "> </label>| ;
 : <<legend>> ( str cnt - ) <legend> +html </legend> ;
 : <<Link>>   ( LinkAdr cnt text cnt - ) <aHREF" 2swap +HTML "> +HTML </a> ; \ For simple links
 
@@ -398,10 +400,9 @@ $e7e7e7 constant ButtonWhite
 \ Eg: 171612 20161023  DatePicker$ type abort \ 2016-10-23T17:16
 
 : <InputTime> ( name& cnt  hhmm - )
-  100 * +HTML| <input type="time" value="| TimePicker$ +HTML  +HTML| "|
-+HTML| aria-labelledby="| +HTML
-  +HTML| " style="width: 70px;" > <input type="text" name="nn" hidden="true"/> |  ;
-
+   100 * >r  2dup <<label>>
+   +HTML| <input type="time" value="| r> TimePicker$ +HTML  +HTML| "|
+   2dup +HTML|  2dup id="| +HTML  +HTML| " name="|   +HTML "> ;
 
 : ExtractTime ( adrBuffer cnt - time|ior )  \ EG: s" 23%3A59" ExtractTime for 23:59
    2dup [char] % extract$ s>number? >r d>s 100 *
@@ -448,7 +449,7 @@ $e7e7e7 constant ButtonWhite
 : +cssButtonData ( WidthButtonPx FontSizePx - )
       +cssButton{  +crlf +HTML| margin: 6px 4px;|   }| ;
 
-3000 constant //HtmlPage-layout-reserved
+16000 constant //HtmlPage-layout-reserved
 /HtmlPage //HtmlPage-layout-reserved - constant //HtmlPage
 
 : LoadDataFile ( At$ hndl - )                      \ Load a complete file when it fits OR
@@ -513,8 +514,7 @@ $e7e7e7 constant ButtonWhite
    +HTML| <style> | svg_style-header
     s" a:link, a:visited {  cursor: pointer; } " +HTML
    95 14 +cssButton{}   \ Round buttons
-   +HTML|  fieldset { border:2px solid black } |
-
+   +HTML|  fieldset { border:2px solid black } | 
    +HTML| .vertslidecontainer [type="range"][orient="vertical"] { |
      +HTML| height: 200px; |
      +HTML| width: 70px; |
@@ -550,7 +550,7 @@ $e7e7e7 constant ButtonWhite
    2over  Html-title-header CssStyles </head> 3tables ;
 
 : <EndHtmlLayout>   ( - )
-   </table>  </font> </fieldset> </td></tr> </table>  </td></tr> </table>
+     </table>  </font> </fieldset> </td></tr> </table>  </td></tr> </table>
    </center> </form> </body>  </html>  ;
 
 : html-header   ( title cnt - )
@@ -595,19 +595,7 @@ dup dup file-size throw d>s dup cell+ allocate throw dup to &favicon  \ hdnl hnd
 cell+ -rot swap read-file throw  swap close-file throw
 &favicon !   &favicon lcount
 
-:  0favicon.ico     ( - )
-   htmlpage$ off
-   s" favicon.ico" 2dup file-status nip
-      if    +html +HTML|  missing.|
-      else  r/w bin open-file throw htmlpage$ off
-            htmlpage$ cell+ swap LoadDataFile
-      then  ;
-
-
-
-:  favicon.ico     ( - )
-    &favicon lcount  htmlpage$ lplace ;
-
+: favicon.ico     ( - ) &favicon lcount  htmlpage$ lplace ;
 
 also TCP/IP TCP/IP DEFINITIONS
 

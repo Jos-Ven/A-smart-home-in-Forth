@@ -1,7 +1,3 @@
-marker CentralHeating.fs .latest \ The central heating page
-\ The value of StandBy- is used to detect if you are present.
-\ StandBy- is Changed by HandleGForthResponse. That should be adapted for your situation.
-
 \ ---- Assigning GPio pins ---------------------------------------------------------------------------
 cr .( Assigned GPio pins in CentralHeating.fs )
 
@@ -20,17 +16,12 @@ ConfigVariable EndTimeOutTempLimit
 EnableConfigFile
 
 StartTimeOutTempLimit @ EndTimeOutTempLimit @ + 0=
-  [IF]  \ Iniitial between 11:30 and 23:59
+  [IF]  \ Initial between 11:30 and 23:59
         1130 StartTimeOutTempLimit !
         2359 EndTimeOutTempLimit !
   [THEN]
 
-
-2 value NightMode-
-true value Job-
 0 value #Jobs
-2variable new-timespan
-variable  Enter-Timespan
 
 : .y|n            ( flag - )  if  +HTML| Y| else +HTML| N| then ;
 
@@ -40,18 +31,17 @@ variable  Enter-Timespan
 : OpeningHours-   ( - flag ) \ For nightmode
    GetStartParams  EndTimeOutTempLimit @ UtcTics-from-hm fbetween ;
 
-: ConditionsNightModeOn ( - SwitchNightservice- )
-   GetStartParams f<       if true exit  then
-   StandBy-                if true exit  then
-   OpeningHours- not       if true exit  then
-   false ;
+
+needs cHeating_mpn.f
+
+: i_Automatic@ ( - value ) i_Automatic bInput@ ;
 
 ALSO HTML
 
 : .helpCv ( - )
   +HTML| <font size="2">|
    HTML| Abstract:| <<strong>> <br>
-   Job-
+   i_Automatic@
       if    +HTML| Between | StartTimeOutTempLimit @ .html
             +HTML|  and | EndTimeOutTempLimit @ .html
             +HTML|  the thermostat will execute its schedule.|
@@ -67,34 +57,30 @@ ALSO HTML
 
 : .StatisticsCv ( - )
      <tdLTop> <fieldset>  s" Statistics" <<legend>>
+     </form> <form>
      100 230 0 4 1 <tablepx>   ( wPx hPx cellspacing padding border -- )
          <tr><td>  HTML| Item|  <<strong>> </td>
              <td>  HTML| Flag|  <<strong>> </td>
              <td>  HTML| Start| <<strong>> </td>
              <td>  HTML| End|   <<strong>> </td></tr>
-
-         <tr><tdL>  ButtonWhite black s" SetTimespan"  nn" <StyledButton>
-         <td>  OpeningHours- Job- and .y|n </td>
+         <tr><tdL>  ButtonWhite black s" SetTimespan"   nn"  <StyledButton> \ 1 ...
+         <td>  OpeningHours- i_Automatic@  and .y|n </td>
          </td><td>    s" tStart" StartTimeOutTempLimit @  <InputTime> </td>
          </td><td>    s" tEnd"   EndTimeOutTempLimit @    <InputTime> </td>
-
-         <tr><tdL> +HTML| Present: |   </td><td>  StandBy- not .y|n  </td>  2 <#tdL> </td></tr>
-
+         <tr><tdL> +HTML| Present: |   </td><td>
+                   i_Present bInput@ .y|n  </td>  2 <#tdL> </td></tr>
          <tr> 4 <#tdL>   HTML| State: |  <<strong>>
                 <br> +HTML| The night mode is | +Nightmode +HTML| .|
-                <br> +HTML| The job | Job-
+                <br> +HTML| The job | i_Automatic@
                           if    +HTML| runs. Entry count:| #Jobs .Html
                           else  +HTML| has been stopped. |
                           then  </td></tr>
-      </table> </fieldset> </td>  ;
+      </table> </form> <form> </fieldset> </td>  ;
 
 : (+.Nightmode)  ( - )
          +HTML| Nightmode:|   +Nightmode
-   <br>  Job-   if   +HTML| Automatic |   else  +HTML| Forced |  then ;
-
-: ExtractTimes ( adr cnt - Endtime Starttime ) \ for: GET /CV%20menu?203=SetTimespan&tStart=12%3A30&X=&tEnd=23%3A59&X= HTTP/1.1
-   2dup  s" tStart" ExtractTime >r
-         s" tEnd"   ExtractTime r> ;
+   <br>  i_Automatic@
+            if   +HTML| Automatic |   else  +HTML| Forced |  then ;
 
 : OnOffColors ( - ColorButton ColorText )
    if ltBlue  else ButtonWhite  then black ;
@@ -102,11 +88,13 @@ ALSO HTML
 : .ControllButtons ( - )
    <tdLTop> <fieldset> s" Schedule thermostat" <<legend>>
           100 230 14 0 0 <tablepx>   ( wPx hPx cellspacing padding border -- )
-          <tr><tdL>  NightMode- OnOffColors s" Night mode"  nn" <StyledButton>
-              </td> <tdL> Job- OnOffColors s" Job"   nn" <StyledButton> </td></tr>
-          <tr><tdL> NightMode- not OnOffColors s" Thermostat"   nn" <StyledButton>
+
+          <tr><tdL>  out-mp any-mp dup 0=
+                     OnOffColors s" Night mode"  nn" <StyledButton>
+              </td> <tdL> i_Automatic@
+                          OnOffColors s" Job"   nn" <StyledButton> </td></tr>
+          <tr><tdL> ( out-mp fire ) OnOffColors s" Thermostat"   nn" <StyledButton>
               </td> <tdL>  s" Shutdown" s" AskShutDownPage"  <CssButton>  </td></tr>
-              s" nn" s" EnterTimespan"   <<HiddenInput>>
           <tr><tdL> .HtmlSpace </td></tr>
       </table> </fieldset> </td> ;
 
@@ -116,55 +104,48 @@ ALSO HTML
        <tr> 2 <#tdL> .helpCv </td> </tr>
     <EndHtmlLayout> ;
 
-: UpdateTimeSpan ( - )
-    new-timespan 2@ 2dup <
-      if   EndTimeOutTempLimit ! StartTimeOutTempLimit !
-      else 2drop
-      then  ;
+: set-cv ( flag - )
+   if   CvNight -Off
+   else CvNight -On
+   then ;
 
-: Run/StopJob ( - )  false to StandBy- Job- not to Job-  ;
-
-: SetNightMode ( mode - htmlpage$ lcount )
-   to NightMode-  false to Job-  ;
-
-: NightmodeOn  ( - )  true  SetNightMode CvNight -On    ;
-: NightmodeOff ( - )  false SetNightMode CvNight -Off   ;
-
-9 constant NoChange
-
-: DetectStandby ( packet cnt - flag ) \ Flag: -1:Standby 0:NoStandby  9:Error
-   dup 0=
-     if  2drop NoChange exit
+: Run/StopJob ( - )
+   i_Present bInputon
+   i_Automatic@ dup                                            \ Change from automatic to manual?
+     if     [ autom-mp all-bits ] literal autom-mp match-mp
+            i_Mode bInput!                                      \ keep the current state
      then
-   s" InStandby" compare 0= ;
+   not i_Automatic bInput!
+   eval-ch-net set-cv ;
 
-: NightServiceChanged? ( new - flag )
-   dup NightMode- <>
-     if    to NightMode- true
-     else  drop false
-     then ;
-
-: SwitchNightservice ( flag - )
-    case
-        true     of true  NightServiceChanged?  if  log" Night mode on"  CvNight -On   then  endof
-        false    of false NightServiceChanged?  if  log" Night mode off" CvNight -Off  then  endof
-         log" NoChange."
-    endcase ;
+: set-Nightmode ( i_Mode - )
+    i_Mode      bInput!
+    i_Automatic bInputOff
+    eval-ch-net dup set-cv  out-mp >last-out c! ;
 
 : SetStandby ( f - )
-      dup
-        if    log" Starting standby"  \ When you are going away.
-        else  log" Standby cancelled" \ When you are getting at home.
-        then  to StandBy- ;
+    dup
+      if    log" Starting standby"  \ When you are going away.
+      else  log" Standby cancelled" \ When you are getting at home.
+      then  not i_Present bInput!  ;
+
+true SetStandby
 
 : OnStandby ( parm from  - )
-  drop \  SendConfirmation
-  SetStandby ;
+   drop \  SendConfirmation
+   SetStandby ;
 
+: SwitchNightservice ( flag - )
+   dup out-mp  >last-out c@ 0<> <>
+    if  dup out-mp >last-out c! dup set-cv
+          if    log" Night mode off"
+          else  log" Night mode on"
+          then
+    then ;
 
 : ConditionsNightMode ( - )
-   Job-
-     if  1 +to #Jobs ConditionsNightModeOn   SwitchNightservice
+   i_Automatic@
+     if  1 +to #Jobs eval-ch-net SwitchNightservice
      then ;
 
 : JobNightService  ( - )
@@ -174,33 +155,25 @@ ALSO HTML
      repeat
    cr  .date space .time ."  Bye JobNightService" Bye  ;
 
-0 value TidJobNightService
+0 value TidJobNightService  9 out-mp >last-out c!  eval-ch-net set-cv
 
  ' JobNightService      execute-task to TidJobNightService
- ConditionsNightModeOn  SwitchNightservice
 
 
 ALSO TCP/IP DEFINITIONS \ Adding the page and it's actions to the tcp/ip dictionary
 
 : /CV%20menu ( - ) ['] CvMenu set-page  ;
-: tStart      ( <hh%3Amm> - time )  parse-name ExtractTime ;
-: tEnd        ( start-time -  )     tStart  new-timespan 2! ;
 : Job         ( - ) Run/StopJob  ;
-: Night+mode  ( - ) NightmodeOn  ;
-: Thermostat  ( - ) NightmodeOff ;
+: Night+mode  ( - ) false set-Nightmode ;
+: Thermostat  ( - ) true  set-Nightmode ;
 
-: EnterTimespan ( - )
-     Enter-Timespan @
-        if   UpdateTimeSpan   Enter-Timespan off
-        then  ;
+: parse-time ( <hh%3Amm> - time ) parse-name 2drop parse-name ExtractTime ;
 
-: SetTimespan ( - )  Enter-Timespan on ;
-
-\ ShutDownOptions  s" Shutdown" s" AskShutDownPage"  <CssButton>
+\ For: http://192.168.0.207:8080/CV%20menu?nn=SetTimespan&tStart=11%3A30&tEnd=23%3A59
+: SetTimespan ( - )
+   parse-time  StartTimeOutTempLimit ! parse-time  EndTimeOutTempLimit ! ;
 
 FORTH DEFINITIONS PREVIOUS PREVIOUS
-
-
 
 \s
 

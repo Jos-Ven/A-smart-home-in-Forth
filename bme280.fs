@@ -97,8 +97,6 @@ require Common-extensions.f
   0xFF 0xF7  \ 0xF7...FE
     do    fd i wiringPiI2CReadReg8 loop ;
 
-: b. ( - )  base @ swap 2 base ! u. base ! ;
-
 : >>  ( n1 #shifts - ) \ Python's way to perform a logical right shift
     >r dup 0<
        if    abs r> rshift negate

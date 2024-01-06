@@ -548,7 +548,7 @@ variable init-webserver-gforth-chain
      else   2drop false
      then  ;
 
-: ShutdownTCPConnection ( aSock - )  dup ShutdownConnection close drop ;
+: ShutdownTCPConnection ( aSock - ) dup ShutdownConnection close drop ;
 
 : .LinuxError ( n - )
    -1 =
