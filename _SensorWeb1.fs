@@ -1,5 +1,5 @@
 needs Common-extensions.f  cr \ Basic tools for Gforth and Win32Forth.
-marker _SensorWeb1.fs .latest \ To support extra sensors. By J.v.d.Ven. 17-07-2023
+marker _SensorWeb1.fs .latest \ To support extra sensors. By J.v.d.Ven. 07-02-2024
                               \ It needs Gforth on a Raspberry Pi with linux (Jessie or Bullseye)
                               \ Enable the interfaces I2c and Spi with: sudo raspi-config
 
@@ -994,7 +994,6 @@ TCP/IP DEFINITIONS \ Adding the page and it's actions to the tcp/ip dictionary
 : PlotsWH            ( 'Plots w h - )        0 set-page rot Dynpage ;
 
 : Ask_HumidityStandBy ( host-id - )
-   cr dup . ." HumidityStandBy "
    &bme280Record >Humidity f@ 100.e f* f>s (.) tmp$ place s"  " tmp$ +place
    i_Present bInput@ not (.) tmp$ +place
    s"  HumidityStandBy"  tmp$ +place
