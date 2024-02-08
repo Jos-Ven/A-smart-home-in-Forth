@@ -51,7 +51,7 @@ Month	        c	12	0409
    cr ." Gui "   [ gui-mp   all-bits ] literal gui-mp   .match-mp
    cr ." Out "   out-mp .any-mp ;
 
-init-net
+init-net  .eval-wnd-net
 
 0 [if]
     i_Light         bInputOn
