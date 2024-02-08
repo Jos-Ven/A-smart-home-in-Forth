@@ -1,4 +1,4 @@
-marker multiport_gate.f  \ 6-2-2024 by J.v.d.Ven
+marker multiport_gate.f  \ 8-2-2024 by J.v.d.Ven
 
 0 [if]
 
@@ -21,7 +21,9 @@ Advantages:
 [then]
 
 s" win32forth" ENVIRONMENT? [IF] DROP
-dup-warning-off sys-warning-off
+   dup-warning-off sys-warning-off
+   font NewFont  18 height: NewFont   NewFont SetFont: cmd
+   synonym es reset-stacks
 [then]
 
 
@@ -30,7 +32,7 @@ dup-warning-off sys-warning-off
 begin-structure /multiport
   lfield: inputs
   cfield: >threshold \ For sum-mp
-  cfield: >#bInputs  \ Set the number of used bits
+  cfield: >#bInputs  \ The number of used bits
   cfield: >last-out  \ Optional to be set by an application
   cfield: >reserved2
 end-structure
@@ -48,7 +50,7 @@ end-structure
      then  .line-- ;
 
 s" win32forth" ENVIRONMENT? [IF] DROP
-dup-warning-on sys-warning-on
+   dup-warning-on sys-warning-on
 [then]
 
 
@@ -81,9 +83,9 @@ dup-warning-on sys-warning-on
 
 \ ------ Adressing the inputs of a multiport gate:
 
-: binput:
-   create dup , swap dup , 1+ swap  \ compile-time: ( input# &multiport - input#+1 &multiport )
-   does> 2@ ;                       \     run-time: ( - input# &multiport )
+: binput:       \ Compile-time: ( input# &multiport <name> - input#+1 &multiport )
+   create dup , swap dup , 1+ swap
+   does> 2@ ;   \ Run-time: ( - input# &multiport )
 
 : bInput@    ( input# &multiport - input-value ) @ swap test-bit abs ;
 : bInput!    ( flag input# &multiport - )  dup >r @ -rot bit! r> ! ;
@@ -91,13 +93,14 @@ dup-warning-on sys-warning-on
 : bInputoff  ( input# &multiport - )      0 -rot bInput! ;
 : .bInput    ( input# &multiport - )      over . bInput@ .  ;
 : .inputs    ( #inputs &inputs - )
-   cr ." # Input"
-   swap 1st-bInput
+   cr ." # Input"  swap 1st-bInput
      do    i over cr .bInput
      loop  drop ;
 
+: .inputs-mp ( &multiport - ) dup >#bInputs c@ swap .inputs ;
+
 : activated-bit#    ( bit# &multiport - activated-bit ) drop activate-bit ;
-: all-bits          ( &multiport - all-used-bits ) >#bInputs c@ push-bits ;
+: all-bits          ( &multiport - value-all-used-bits ) >#bInputs c@ push-bits ;
 
 : invert-bit-input  ( input# &multiport  - )
    2dup bInput@ not -rot bInput!  ;
@@ -112,21 +115,21 @@ dup-warning-on sys-warning-on
 
 : sum-mp     ( &multiport - flag )       dup sum-inputs  swap >threshold c@  >=  ;
 : .sum-mp    ( &multiport - )
-     dup >r >#bInputs c@ r@ .inputs
+     dup >r .inputs-mp
    cr r@ sum-inputs  dup
    ." Output," r> >threshold c@   \ Minimal needed
    ." threshold: "  dup .   >= swap     .(result)  ;
 
-: match-mp   ( pattern &multiport - flag ) @ over and = ;
+: match-mp   ( pattern &multiport - flag ) @ = ;
 : .match-mp  ( pattern &multiport - )
-   dup >r >#bInputs c@ r@ .inputs
+   dup >r .inputs-mp \ >#bInputs c@ r@ .inputs
    cr dup r@ match-mp
       ."     Input value: " r> ?
    cr ."        Match at: " swap . dup  .(result) ;
 
 : any-mp     ( &multiport - flag ) @ 0<> ;
 : .any-mp    ( &multiport - )
-   dup >r >#bInputs c@ r@ .inputs
+   dup >r .inputs-mp
    cr     r@ any-mp
       ."     Input value: " r> ?
    cr ."             Any: " dup . dup   .(result) ;
@@ -136,24 +139,37 @@ dup-warning-on sys-warning-on
 
 0 [if] \ Change the 0 into 1 for the following test case
 
-2variable eg-multiport
+2variable eg-multiport               \    Step 1: Create a 2variable for a multiport gate
 
-0 eg-multiport bInput: i_present     \ 0
+                                     \ #
+0 eg-multiport bInput: i_present     \ 0  Step 2: Enumerate and name the input bits
                bInput: i_Temperature \ 1
                bInput: i_Light       \ 2
-               >#bInputs c!          \ 3
+                       >#bInputs c!  \ 3  Step 3: Set >#bInputs and >threshold
 3 eg-multiport >threshold c!
 
- i_present     bInputOn
+cr .( eg-multiport defined.) cr
+
+\ eg-multiport .inputs-mp
+
+\ Set the inputs
+     i_present bInputOn
  i_Temperature bInputOn
- i_Light       bInputOn  cr eg-multiport .sum-mp  \ Slow
+   1   i_Light bInput! \ Nonzero values are replaced by 1.
 
-: .test-multiport  ( - )  \ Fast!
-  [ eg-multiport all-bits ] literal eg-multiport .match-mp ;
+\ i_Light bInput@ .s
 
-cr .test-multiport
+\ eg-multiport sum-inputs .
+\ eg-multiport sum-mp . \ Slow  ( uses: do...loop )
 
-\ eg-multiport dup >#bInputs c@ swap .inputs
+: test-multiport  ( - flag )   \ Fast!
+  [ eg-multiport all-bits ] literal eg-multiport match-mp ;
+
+
+\ cr test-multiport
+
 \ eg-multiport >threshold c@ .
 \ eg-multiport ?
+\ i_present invert-bit-input
+
 [then]
