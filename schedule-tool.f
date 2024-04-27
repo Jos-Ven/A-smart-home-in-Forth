@@ -75,20 +75,22 @@ f# 0.0e0 fvalue boot-time
 : /schedule-file ( - #records )
    &schedule-file count file-exist?
      if   &schedule-file count r/w open-file drop
-          dup file-size drop d>s swap close-file drop
+          dup file-size drop d>s swap CloseFile
           &schedule-table >record-size @ /
      else  20 \ 20 records to start
      then ;
 
 : load-schedule ( - )
-   &schedule-table >#records @  1+ &schedule-table >record-size @ *  dup allocate drop dup  &schedule-table !
+   &schedule-table >#records @  1+ &schedule-table >record-size @ *  dup
+   allocate drop dup  &schedule-table !
    swap 2dup 120 fill
    &schedule-file count file-exist?
         if    &schedule-file count @file drop
         else  2drop
         then
   -1 scheduled !
-   &schedule-table >#records @  dup allocate-ptrs dup &schedule-table  >table-aptrs !
+   &schedule-table >#records @  dup allocate-ptrs
+   dup &schedule-table  >table-aptrs !
    &schedule-table >record-size @  rot build-ptrs ;
 
 10 value #new-records

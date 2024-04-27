@@ -19,8 +19,8 @@ false value S5? \ to detect my S5
 : RefreshCmd ( - )
    htmlpage$ off
    <html5>  <html> <head> s" Monitor" Html-title-header
-   +HTML| <META HTTP-EQUIV="Pragma" CONTENT="no-cache"> |
-   +HTML| <META HTTP-EQUIV="Expires" CONTENT="-1">
+    +HTML| <meta http-equiv="Cache-control" content="private"> |
+    +HTML| <META HTTP-EQUIV="Expires" CONTENT="-1">
      S5? if   JavaRefresh
          else MetaHeaderRefresh
          then

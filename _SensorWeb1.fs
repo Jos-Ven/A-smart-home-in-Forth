@@ -32,7 +32,6 @@ cr
 
 [THEN]
 
-
 [defined] AdminPage     [IF] Needs Master.fs  [ELSE] needs slave.fs  [THEN]
 
 
@@ -732,7 +731,7 @@ create &Bme280Data 200 allot
                     if    2drop false
                     else  /bme280Record rot ReadFile+lPlace
                     then
-            then  swap close-file drop
+            then  swap CloseFile
     then ;
 
 : +Bme280Int ( str cnt letter - )
@@ -758,7 +757,7 @@ create &Bme280Data 200 allot
 
 
 0  constant  LdrDataReceiver    \ Server that gets the Ldr Data
-1.6e fconstant MinimalLdr      \ When the LDR gets below MinimalLdr \ was 1.8
+2.0e fconstant MinimalLdr      \ When the LDR gets below MinimalLdr \ was 1.8
 0 value LowLightLevelsent
 
 cr .( Ldr:) Ldrf@% f.
@@ -824,8 +823,8 @@ i_Present bInputoff
 : JobSendLowLightLevel   ( - )
     5000 ms
     log" JobSendLowLightLevel started"
-         begin   web-server-sock
-         while  SendLowLightLevelOnceAfter  1 Minutes*   ms
+         begin  web-server-sock
+         while  SendLowLightLevelOnceAfter  1 Minutes* ms 
          repeat
    cr  .date space .time ."  Bye JobSendLowLightLevel" Bye  ;
 

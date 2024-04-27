@@ -1,6 +1,5 @@
 Marker bme280-logger.fs
 
-needs unix/pthread.fs
 needs unix/mmap.fs
 needs mcp3008.fs
 needs bme280.fs      \ Sensor for humidity temperature pressure
@@ -103,7 +102,7 @@ Samples: LdrSamples
 : OnNewYear ( - ) \ Creates each year a new logfile
    InitialYear yearToday <>
      if  yearToday dup to InitialYear SetFilename
-         OpenCreateLogfile close-file drop
+         OpenCreateLogfile CloseFile
      then ;
 
  60 1000 * #samples / constant SampleTime
@@ -163,7 +162,7 @@ false value \Overshoot  \ Change \Overshoot into true to see the time after 10 s
                 \ dup flush-file drop  \ cr .InlineRec
               else cr (date) type space .time ." Invalid record"
               then
-          close-file drop
+          CloseFile
     again ;
 
 : (LogValues ( - )
@@ -204,9 +203,9 @@ ALSO HTML
 
 PREVIOUS
 
-: MapFid ( fid -- addr u ) \ For older Gforth versions
+: MapFid ( fid -- addr u ) \ For older Gforth versions 
     >r r@ file-size throw d>s 0 over PROT_RW MAP_SHARED r@ fileno 0 mmap
-    dup ?ior swap r> close-file throw ;
+    dup ?ior swap r> CloseFile ;
 
 : MapBme280Data ( -- vadr count|0  )
     filename$ count 2dup file-status nip

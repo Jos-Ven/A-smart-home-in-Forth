@@ -23,6 +23,9 @@ Last tested under:
             - Added a schedule with a web-gui for a Daily_schedule
 13-11-2023  - Moved the project to https://github.com/Jos-Ven/A-smart-home-in-Forth
             - Changes are now logged on Git.
+
+15-04-2024  - Most important: Adapted ShGet to solve a memory leak
+
 [then]
 
 needs Common-extensions.f
@@ -48,7 +51,8 @@ $ffff /maxheader - constant /HtmlPage   \ max packet to send excl header
 
 create req-buf /req-buf allot
 
-: allocate-lcounted-buffer ( size - adr ) cell+ allocate abort" Memory allocation failed" ;
+: allocate-lcounted-buffer ( size - adr )
+    cell+ allocate abort" Memory allocation failed" ;
 
 cell newuser aSock
 -1   value   web-server-sock
@@ -474,9 +478,9 @@ cell newuser pMsStart
             then ;
 
 : SendUdp         ( msg$ cnt #server -- )
-  CheckGateway
+   CheckGateway
     if    (SendUdp)
-    else  3drop drop log" No gateway."
+    else  3drop  log" No gateway."
     then ;
 
 : accept-socket   ( server -- asocket iaddr )
@@ -497,7 +501,7 @@ cell newuser pMsStart
    &Version cell+ count 2dup file-status 0<>
    if    drop R/W   create-file throw >r
          0 &Version cell r@ write-file throw
-         r> close-file throw
+         r> CloseFile
    else  drop  R/W map-file over @ -rot
          unmap-file
    then  &Version ! ;
@@ -1012,7 +1016,7 @@ defer udp-requests  ( adr len --)
    s" yes" s" background.log"  Add/Tmp/Dir  fsearch nip      \ See also gf.sh for background operations
       if   s" background.log"  Add/Tmp/Dir r/w  open-file throw
            dup s" Done! " rot write-file throw
-           close-file drop
+           CloseFile
            ['] noop IS dobacktrace
      then
    start-web-server 200 ms

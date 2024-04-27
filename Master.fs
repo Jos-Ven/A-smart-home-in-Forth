@@ -32,7 +32,7 @@ create nupdate.sh$ ," nupdate.sh"
 : WriteFirstCharE ( - ) \ Making sure it will be copied since it has been changed.
   nupdate.sh$ count r/w open-file throw >r
   s" e" r@ write-file throw
-  r> close-file drop ;
+  r> CloseFile ;
 
 : (SentUpdateSignalToAllSystems ( - ) \ Sends a update to all systems
    WriteFirstCharE
@@ -223,7 +223,7 @@ Needs SetVersionPage.fs
   >r s" date" r@ write-line throw
   s" echo End nupdate.sh" r@ write-line throw
   s" exit 0" r@ write-line throw
-  r> close-file drop
+  r> CloseFile
   s" sudo chmod +x " upad place nupdate.sh$ count +upad" system ;
 
 : <<UpdateButtonOption>>  ( buttontxt cnt Option - )

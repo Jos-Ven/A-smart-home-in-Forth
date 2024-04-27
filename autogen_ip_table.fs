@@ -44,7 +44,7 @@ IpStartRange 10 + constant SecondIpRange  \ For other systems
    #servers /server * dup allocate throw dup>r swap
    2dup erase
    ip_table$ count  r/w  create-file throw dup>r  write-file  throw
-   r> close-file drop
+   r CloseFile
    r> free drop ;
 
 

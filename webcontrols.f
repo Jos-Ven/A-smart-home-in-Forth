@@ -459,7 +459,7 @@ $e7e7e7 constant ButtonWhite
         else  2drop
         then
    //HtmlPage  r@ read-file throw
-   r> close-file throw  htmlpage$ +! ;
+   r> CloseFile htmlpage$ +! ;
 
 : IncludeFile ( title$ cnt filename cnt - )
    r/w bin open-file throw >r
@@ -591,8 +591,9 @@ logFile" start-logfile  \ Start a logging.
 0 value &favicon
 
 s" favicon.ico" r/o bin open-file throw
-dup dup file-size throw d>s dup cell+ allocate throw dup to &favicon  \ hdnl hndl size &favicon
-cell+ -rot swap read-file throw  swap close-file throw
+dup dup file-size throw d>s dup cell+ allocate throw
+dup to &favicon  \ hdnl hndl size &favicon
+cell+ -rot swap read-file throw  swap CloseFile
 &favicon !   &favicon lcount
 
 : favicon.ico     ( - ) &favicon lcount  htmlpage$ lplace ;

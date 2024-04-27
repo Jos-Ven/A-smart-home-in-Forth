@@ -168,7 +168,7 @@ PUD_UP    constant PullUpResistor
           dup \State      4 hndl w-spaces hndl w-on/off
               \pDevice name>string 3 hndl w-spaces hndl fwrite
      loop
-   hndl close-file drop ;
+   hndl CloseFile ;
 
 \s EG:
 

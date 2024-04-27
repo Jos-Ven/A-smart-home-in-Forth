@@ -140,14 +140,11 @@ S" gforth" ENVIRONMENT? [IF] 2drop
     last-lit,   \ postpone name>string \ type
    [char] " parse postpone sliteral postpone def-logged ; immediate
 
-
-User sh$  cell uallot drop
-
 : ShGet ( addr u -- addr' u' ) \ Differs from the sh-get version in scrip.fs
     \G open command addr u, and read in the result
-    sh$ free-mem-var
     r/o open-pipe throw dup >r slurp-fid
-    r> close-pipe throw to $? 2dup sh$ 2! ;
+    r@ flush-file drop
+    r> close-pipe throw drop 2dup upad place drop free drop upad count ;
 
 : OsVersion" ( - adr cnt ) s" cat /etc/os-release | grep VERSION=" ShGet 1- ;
 
@@ -340,8 +337,8 @@ Needs security.f
       ['] (+log LogSlot
       ;
 
-synonym s>number? (number?)
-synonym pause     winpause
+synonym s>number?  (number?)
+synonym pause      winpause
 
 : s>number    ( adr count - d1 )  s>number? drop ;
 : Wall        ( msg$ count - ) type ; \ Perhaps not possible here.
@@ -349,7 +346,6 @@ synonym pause     winpause
 \in-system-ok : .latest ( - ) latestxt @ .name ;
 
 [THEN]
-
 
 
 0x1B constant escape
@@ -360,12 +356,12 @@ synonym pause     winpause
     r/w create-file throw >r
     r@  write-file throw
     r@  flush-file drop
-    r>  close-file drop ;
+    r>  CloseFile ;
 
 : @file ( buffer cnt filename cnt - #read ) \ Place a file in a buffer
     r/o open-file throw  dup>r
     read-file throw
-    r> close-file drop  ;
+    r> CloseFile  ;
 
 
 : Start-logfile  ( name cnt - )

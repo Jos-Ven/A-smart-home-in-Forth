@@ -5,7 +5,7 @@ marker LoadAvg.fs
 : GetLoadAvg ( - LoadAvgLine$ count )
     s" /proc/loadavg" r/o open-file throw >r
     upad dup 80 r@ read-file throw
-    r> close-file throw ;
+    r> CloseFile ;
 
 : Find5mLoadAvg ( - LoadAvgLine$ count  15LoadAvgStart$ remainder )
     2 /string  bl scan ;

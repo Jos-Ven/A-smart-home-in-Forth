@@ -45,7 +45,7 @@ S" gforth" ENVIRONMENT? [IF] 2drop
      if    ConfigFile$ count r/w bin open-file  abort" Can't open the cofiguration file"
            /ConfigDef over file-size>s   2dup >   \ Extend it when it is needed.
                 if    - swap extend-file          \ Keep the extisting data.
-                else  2drop close-file throw      \ Do nothing when it is right.
+                else  2drop CloseFile             \ Do nothing when it is right.
                 then
      else  CreateConfigFile
      then

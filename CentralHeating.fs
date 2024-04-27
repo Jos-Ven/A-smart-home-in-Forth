@@ -141,6 +141,7 @@ true SetStandby
           if    log" Night mode off"
           else  log" Night mode on"
           then
+    else drop
     then ;
 
 : ConditionsNightMode ( - )

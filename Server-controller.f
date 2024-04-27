@@ -164,7 +164,7 @@ end-c-library
 
 : close-socket       ( socket -- )
    dup 0<>
-       if  fileno closesocket
+       if   dup flush-file drop fileno closesocket
        then  drop ;
 
 : get-info ( addr u port -- info|0 ) 0 { w^ addrres }

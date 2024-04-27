@@ -11,7 +11,7 @@ marker uptime.fs    \ To get the uptime of the system
    upad dup 80 r@ read-file throw
    upad swap [char] . scan
    drop upad - $>s
-   r> close-file throw ;
+   r> CloseFile ;
 
 : SplitTime ( TimeInSeconds - #minutes #hours #days )  60 / 60 /mod 24 /mod  ;
 

@@ -42,7 +42,8 @@ needs /circular      ../esp/extra.fth
 
 4 cells value /table        \ The minimal needed size incl. 0
 
-: init-table                ( /table - &table ) dup allocate throw tuck swap erase ;
+: init-table                ( /table - &table ) dup allocate
+                                                throw tuck swap erase ;
 \ : >record-list            ( &table - &list-records ) ; immediate
 ' cell+ alias  >table-aptrs ( &table - &list-adress-pointers )
 : >#records                 ( &table - &number-records ) 2 cells+ ;
@@ -141,7 +142,7 @@ needs /circular      ../esp/extra.fth
     #keys xdrop ;
 
 : create-file-ptrs ( name -- )
-   count r/w bin create-file abort" Can't create index file."  close-file throw ;
+   count r/w bin create-file abort" Can't create index file." CloseFile ;
 
 : open-file-ptrs   ( name -- hndl )
    count r/w bin open-file abort" Can't open index file." ;
@@ -151,7 +152,7 @@ s" cforth" ENVIRONMENT? 0= [IF]
 : extend-file   ( size hndl - )
     dup>r file-size drop d>s +
     s>d r@ resize-file abort" Can't extend file."
-    r> close-file  drop ;
+    r> CloseFile ;
 
 [THEN]
 

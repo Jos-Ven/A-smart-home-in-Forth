@@ -57,11 +57,11 @@ s" Documents/MachineSettings.fs" file-status nip 0= [if]
                        hFilenames write-file  drop
                   loop
        then
-    hFilenames dup  flush-file  drop close-file drop ;
+    hFilenames dup  flush-file  drop CloseFile ;
 
 2variable Fhndl
 
-: UnMapFileNames ( - )   Fhndl 2@ 2dup MS_SYNC msync drop  unmap ;
+: UnMapFileNames ( - )   Fhndl 2@ 2dup MS_SYNC msync drop unmap ;
 
 : MapFileNames   ( file$ cnt - vadr size )
    2dup r/w open-file drop   dup>r file-size drop d>s 0=
@@ -69,14 +69,15 @@ s" Documents/MachineSettings.fs" file-status nip 0= [if]
          s"  None " upad place
          upad 1+ &FileList-table >record-size @ r@ write-file drop
      then
-   r> close-file drop
+   r> CloseFile
    r/w map-file 2dup Fhndl 2!  ;
 
 1 &FileList-table >record-size @ key: FileNames  FileNames  Ascending $sort
 
 : sort-dir-file ( filename$ cnt - )
    MapFileNames swap &FileList-table !
-   &FileList-table >record-size @ / dup &FileList-table >#records ! allocate-ptrs
+   &FileList-table >record-size @ / dup
+   &FileList-table >#records ! allocate-ptrs
    dup &FileList-table >table-aptrs !
    &FileList-table >record-size @ &FileList-table >#records @ build-ptrs
    by[ FileNames ]by  &FileList-table table-sort
@@ -100,7 +101,7 @@ s" Documents/MachineSettings.fs" file-status nip 0= [if]
    fcounter 0=
        if  hFilenames AddNone
        then
-   hFilenames  dup  flush-file  drop close-file drop sort-dir-file ;
+   hFilenames  dup  flush-file  drop CloseFile sort-dir-file ;
 
 [THEN]
 
@@ -124,7 +125,7 @@ map-handle Fhndl
 
 : MapFileNames   ( file$ cnt - vadr size )
    2dup r/o open-file over file-size drop d>s 0>
-    if    drop close-file drop
+    if    drop CloseFile
           Fhndl open-map-file abort" can't map file."
           Fhndl >hfileAddress @
           Fhndl >hfilelength  @
@@ -137,7 +138,7 @@ map-handle Fhndl
       if     drop cr ." Can't create file list for " 2r> type  ." files."
       else   to hFilenames 2r> ['] .dir->file-list-name  ForAllFileNames
       then
-    hFilenames dup  flush-file  drop close-file drop ;
+    hFilenames dup  flush-file  drop CloseFile ;
 
 [THEN]
 
@@ -164,7 +165,7 @@ HTML DEFINITIONS
 
 : AddFileOptions  ( - )
    FileNameList 2dup file-exist? not
-     if  2dup FileNameList r/w create-file drop close-file drop
+     if  2dup FileNameList r/w create-file drop CloseFile
      then
    MapFileNames dup 0>
      if    &FileList-table >record-size @ /  (AddFileOptions)
