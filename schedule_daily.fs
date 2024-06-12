@@ -14,9 +14,13 @@ also html
 : LogToday ( - )
     s" *** " upad place (date) +upad  s"  *** " +upad" +log ;
 
+[DEFINED]  ControlWindow   [IF]  0 value #changes [THEN]
+
 : Good-morning ( - )
     log" Good morning " LogToday  &last-line-packet$ count write-log-line
-    FreeMem" write-log-line  ;
+          [DEFINED]  ControlWindow   [IF]  0 to #changes [THEN]
+    FreeMem" write-log-line
+     ;
 
 : Reset-logging-saturday ( - )
    date-now jd week-day RenewLogDay =

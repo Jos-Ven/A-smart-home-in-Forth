@@ -1,5 +1,5 @@
-needs Common-extensions.f \ See domotica_vX.zip at http://home.kpn.nl/~josv on the smart home page
-cr marker _UploadServer.f  bl emit .latest .( 17-12-2024 )      \ by J.v.d.Ven.
+needs Common-extensions.f \ See https://github.com/Jos-Ven/A-smart-home-in-Forth
+cr marker _UploadServer.f  bl emit .latest .( 11-06-2024 )      \ by J.v.d.Ven.
 
 0 [IF]
 This makes it possible to upload sources to the file system of an ESP32 or ESP12F.

@@ -1,5 +1,7 @@
 marker mcp3008.fs
 
+CheckI2c 0=  [IF] cr cr .( ERROR. The needed I2c interface is NOT activated!  ok ) abort cr [then]
+
 \ To Read data from a MCP3008 connected to a RPI for Gforth through the Spi interface
 \ Tested under Jessie
 
@@ -15,8 +17,8 @@ needs wiringPi.fs \ From: https://github.com/kristopherjohnson/wiringPi_gforth/b
 
 #StepsAdc 100e f/ fconstant (Adc%)
 
-: spiSetup  ( spiChannel spiSpeed - fd ) wiringPiSPISetup dup ?ior ;
-: initSpi     ( - )           spiMcp3008 spiSpeed spiSetup to fdSpi ;
+: SetupMcp3008    ( spiChannel spiSpeed - fd ) wiringPiSPISetup dup ?ior ;
+: initMcp3008 ( - )           spiMcp3008 spiSpeed SetupMcp3008 to fdSpi ;
 
 : Adc@ ( spiChannel ADcChannel - RawData )
    upad off   1 upad c!   CHAN_CONFIG_SINGLE or 4 lshift upad 1+ c!
@@ -28,9 +30,11 @@ needs wiringPi.fs \ From: https://github.com/kristopherjohnson/wiringPi_gforth/b
 : .Adc ( spiChannel - )
    #Channels 0  do  dup cr i . i Adc@ .  loop  drop ;
 
+initMcp3008
+
 \\\ Eg:
 0 value fdAdc
-0 spiSpeed spiSetup to fdAdc
+0 spiSpeed SetupMcp3008 to fdAdc
 
 0 2 Adc@ cr cr . cr
 0 .Adc abort

@@ -14,10 +14,12 @@ needs Common-extensions.f
        loop
    nip /string ;
 
-: WiFiBitRate@ ( f: - Mb/s_WiFi )  \
-    s" iwconfig wlan0| awk -F= ' NR==3'" ShGet \ wlan0=name WiFI
-  scanNum
-    s>float 0=
+: WiFiBitRate@ ( f: - Mb/s_WiFi )
+   s" sudo iwconfig " utmp$ place
+   s" ls /sys/class/net| awk -F= ' NR==2'" ShGet 1- +utmp$
+   s"  | awk -F= ' NR==3'" +utmp$
+   utmp$ count ShGet  scanNum  s>float 0=
      if   0e
      then ;
 \\\
+

@@ -1,5 +1,5 @@
-marker Server-controller.f
 needs Common-extensions.f
+marker Server-controller.f
 
 : +pad-log ( - )  +upad" +log ;
 
@@ -144,7 +144,9 @@ end-c-library
 : send-packet { c-addr size socket -- #LastSent }
    socket 0=
       if   false
-      else  socket fileno to socket   3 0
+      else  socket ['] fileno catch
+            if    drop 0  log" fileno error."
+            else  to socket   3 0
                do  socket c-addr size MSG_NOSIGNAL MSG_DONTWAIT or ['] send catch \ Catching possible Write to broken pipe
                      if    2drop 2drop  leave
                      else  dup size = if to size leave then
@@ -154,17 +156,18 @@ end-c-library
                            to size to c-addr
                      then
                loop
-            size dup 0<
-            if   log" Write error to sock."
+               size dup 0<
+                    if   log" Write error to sock."
+                    then
             then
-      then  ;
+      then ;
 
 
 : ShutdownConnection ( fileno - )  SHUT_WR shutdown drop ;
 
 : close-socket       ( socket -- )
    dup 0<>
-       if   dup flush-file drop fileno closesocket
+       if    fileno dup ShutdownConnection closesocket
        then  drop ;
 
 : get-info ( addr u port -- info|0 ) 0 { w^ addrres }
@@ -415,6 +418,7 @@ S" gforth" ENVIRONMENT? [IF] 2drop
 
 : .servers ( - )  \  To be used after FillOnlineIndications.
     cr #servers dup . ." server(s) detected at " hostname$ count type
+      ."  in Server-controller.f"
     cr ." id  sock ip            port online  F  name" 0
        ?do   cr i dup               3 .(u.r)
              dup r>sock @           5 .(u.r)
@@ -448,7 +452,6 @@ S" gforth" ENVIRONMENT? [IF] 2drop
      then     ( filename$ count - fd )
    ['] FileIp ForAllServers
    CloseFile ;
-
 
 \s
 

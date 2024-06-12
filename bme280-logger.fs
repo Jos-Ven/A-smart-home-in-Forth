@@ -1,22 +1,8 @@
 Marker bme280-logger.fs
 
-needs unix/mmap.fs
-needs mcp3008.fs
-needs bme280.fs      \ Sensor for humidity temperature pressure
-needs mq135.fs       \ Sensor for air quality.
-needs ldr.fs         \ Sensor For light intensity.
-needs Wifi_signal.fs \ For WiFi signal strength
-
-needs avsampler.fs   \ Calculates an average for a number of samples.
-needs resetbutton.fs \ In case the system hangs
-needs Common-extensions.f
-
-
 8 constant /location
 
 create extension$ ," .bme280"
-
-: yearToday ( - ) time&date >r 2drop 2drop drop r> ;
 
 yearToday value   InitialYear
 20        newuser filename$
@@ -81,23 +67,9 @@ Samples: HumiditySamples
 Samples: PollutionSamples
 Samples: LdrSamples
 
-: WiFiBitRate@|Mq135f@  ( - f )
-   [DEFINED] WiFiBitRate
-   [IF]    WiFiBitRate@
-   [ELSE]  Mq135f@
-   [THEN]  ;
 
-: WiFiSignalLeve@|Ldrf@%   ( - f )
-   [DEFINED] WiFiBitSignal
-   [IF]    WiFiSignalLeve@
-   [ELSE]  Ldrf@%
-   [THEN]    ;
 
-: logInlineRecord ( fd - ) \ ( f: _Pollution Humidity Temperature  -  )
-   time&date DateTimeCode &bme280Record >Date !  DateTimeCode &bme280Record >Time !
-   Bme280>f &bme280Record >Pressure f! &bme280Record >Temperature f! &bme280Record >Humidity f!  \ Bme280
-   WiFiBitRate@|Mq135f@    >Pollution f!
-   WiFiSignalLeve@|Ldrf@%  >Light f!  ;
+ [UNDEFINED] Bme280>f    [IF] : Bme280>f ( ref - ) ( f: - t h p ) drop 0e0 0e0 0e0 ;  [THEN]
 
 : OnNewYear ( - ) \ Creates each year a new logfile
    InitialYear yearToday <>
@@ -107,18 +79,19 @@ Samples: LdrSamples
 
  60 1000 * #samples / constant SampleTime
 
+
 : takeSample ( fd-Bme280 - )
      dup 0<>
      if  Bme280>f PressureSamples  sample!
                   TemperatureSamples sample!
                   HumiditySamples  sample!
-     else   drop
-            0.0001e   PressureSamples    sample!
-            0.0001e   TemperatureSamples sample!
-            0.0001e   HumiditySamples    sample!
+     else   drop  \ For NON BME280 sensors: Point deferred sensor so it return a float from that sensor.
+            PressureSensor      PressureSamples    sample!
+            TemperatureSensor   TemperatureSamples sample!
+            HumiditySensor      HumiditySamples    sample!
      then
-     WiFiBitRate@|Mq135f@ PollutionSamples sample!
-     WiFiSignalLeve@|Ldrf@%       LdrSamples       sample!
+     WiFiBitRate@|Mq135f@     PollutionSamples sample!
+     WiFiSignalLeve@|Ldrf@%   LdrSamples       sample!
      incr-sample  ;
 
 false value \Overshoot  \ Change \Overshoot into true to see the time after 10 samples
@@ -146,7 +119,7 @@ false value \Overshoot  \ Change \Overshoot into true to see the time after 10 s
      do    over takeSample dup ms
      loop  2drop  SaveTime
    SeeOvershoot
-  PressureSamples    AverageSamples &bme280Record >Pressure f!
+   PressureSamples    AverageSamples &bme280Record >Pressure f!
    TemperatureSamples AverageSamples &bme280Record >Temperature f!
    HumiditySamples    AverageSamples &bme280Record >Humidity f!
    PollutionSamples   AverageSamples &bme280Record >Pollution f!
@@ -166,12 +139,15 @@ false value \Overshoot  \ Change \Overshoot into true to see the time after 10 s
     again ;
 
 : (LogValues ( - )
-   CheckSPI
-      if   initSpi fdBme280 dup ChipId@ 0<
-              if   drop 0
-              then
-      else 0
-      then
+   [defined] initMcp3008
+   [if] CheckSPI
+            if   initMcp3008 fdBme280 dup ChipId@ 0<
+                   if   drop 0
+                   then
+            else 0
+            then
+   [else] 0
+   [then]
    FileRecords  ;
 
 : LogValues ( - )   ['] (LogValues execute-task drop ;
@@ -182,7 +158,7 @@ false value \Overshoot  \ Change \Overshoot into true to see the time after 10 s
    /bme280Record * &bme280-FileRecords @ + ;
 
 \ For the various fields in one record in the logfile:
-: r>DateBme280   ( n - addr ) r>bme280-FileRecord >Date       ;
+: r>DateBme280  ( n - addr ) r>bme280-FileRecord >Date        ;
 : r>TimeBme280  ( n - addr ) r>bme280-FileRecord >Time        ;
 : r>Location    ( n - addr ) r>bme280-FileRecord >Location    ;
 : r>Pressure    ( n - addr ) r>bme280-FileRecord >Pressure    ;
@@ -190,6 +166,8 @@ false value \Overshoot  \ Change \Overshoot into true to see the time after 10 s
 : r>Humidity    ( n - addr ) r>bme280-FileRecord >Humidity    ;
 : r>Pollution   ( n - addr ) r>bme280-FileRecord >Pollution   ;
 : r>Light       ( n - addr ) r>bme280-FileRecord >Light       ;
+
+: GetTemperature ( - temp*10 )  &bme280Record >Temperature f@ 10e f* f>s ;
 
 ALSO HTML
 
@@ -203,7 +181,7 @@ ALSO HTML
 
 PREVIOUS
 
-: MapFid ( fid -- addr u ) \ For older Gforth versions 
+: MapFid ( fid -- addr u ) \ For older Gforth versions
     >r r@ file-size throw d>s 0 over PROT_RW MAP_SHARED r@ fileno 0 mmap
     dup ?ior swap r> CloseFile ;
 

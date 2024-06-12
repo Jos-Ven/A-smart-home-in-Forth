@@ -1,5 +1,7 @@
 marker sitelinks.fs \ To link other Forth servers to a home page
 
+1 value #IndexSite \ Points to the ID of the server that contains an index of all sites.
+
 : +quote ( counted-dest$ - ) >r [char] " sp@ 1 r> +place drop ;
 : </a>2sp       ( - )  +HTML| </a>&nbsp; | ;
 
@@ -41,17 +43,16 @@ also tcp/ip
 
 previous
 
-1 constant #IndexSite \ Points to the ID of the server that contains an index of all sites.
 
-: (SitesIndex) ( - )
+: (SitesIndex) ( - ) \ make the index link visible
     s" /SitesIndex" #IndexSite <pagelink here place
    (Tophref) upad place here count +upad
     s" <strong>Index</strong>" +upad   s" </a> " +upad upad count +html  ;
 
 ' noop is SitesIndex           \ Default is off
-[defined] SitesIndexOpt                    \ When SitesIndexOpt
-  [IF] ' (SitesIndex) is SitesIndex
-  [THEN] \ make the index link visible
+   [DEFINED] SitesIndexOpt                    \ When SitesIndexOpt
+   [IF]   ' (SitesIndex) is SitesIndex
+   [THEN]
 
 
 \s

@@ -1,15 +1,15 @@
-marker webcontrols.f          \ 31-12-2023 webcontrols.f by J.v.d.Ven
+marker webcontrols.f          \ 24-05-2024 webcontrols.f by J.v.d.Ven
 Needs  Web-server-light.f     \ Contains the htmlpage$ buffer
 Needs TimeDiff.f
 
 \ Tags added to the buffer in htmlpage$:
-\ <InputTime> adapted for the latest: https://html.spec.whatwg.org/multipage/input.html
 
 VOCABULARY HTML also HTML HTML DEFINITIONS \ For all html controls/tags
 
 : >|          ( -- ) +HTML| >| ;
 : ">          ( -- ) +HTML| ">| ;
-: .Html       ( n -- ) (.) +html ;
+: .Html       ( n -- )   (.) +html ;
+: .fHtml      ( f: n - ) (f.2) +html ;
 : +1html      ( char -- )  sp@ 1 +html drop ;
 : +crlf       ( -- ) crlf" +html ;
 : <body>      ( -- ) +HTML| <body>| ;
@@ -151,6 +151,10 @@ create Small$ 40 allot
    +HTML| <hr size=|  "." +html
    +HTML| width="100%" color=| "#h." +html >| ;
 
+: <hrWH>      ( color w h -- )
+   +HTML| <hr size=|  "." +html
+   +HTML| width=| "." +html   +HTML| px" color=| "#h." +html >| ;
+
 : <#td ( #HtmlCells - )
       +crlf +HTML| <td colspan= | dup "." +html
       +HTML| width=| 100 swap / 1 max ".%" +html ;
@@ -174,13 +178,14 @@ $0000FF constant Blue
 $00FF00 constant Green
 $FF0000 constant Red
 $FFFF00 constant Yellow
+$DEDE00 constant DkYellow
 $FFFFFF constant White
 
 \ Other
 $8080FF constant lightSlateBlue
 $A0A0FF constant ltBlue
 
-$00AF00 constant DkGreen
+$999999 constant DkGreen
 $CCAACC constant LtMangenta
 $CC22CC constant DkMangenta
 $FEFFE6 constant NearWhite  \ Very pale (mostly white) yellow.
@@ -399,6 +404,7 @@ $e7e7e7 constant ButtonWhite
 
 \ Eg: 171612 20161023  DatePicker$ type abort \ 2016-10-23T17:16
 
+
 : <InputTime> ( name& cnt  hhmm - )
    100 * >r  2dup <<label>>
    +HTML| <input type="time" value="| r> TimePicker$ +HTML  +HTML| "|
@@ -410,6 +416,7 @@ $e7e7e7 constant ButtonWhite
    if    d>s +
    else  3drop -1
    then ;
+
 
 : HomeLink ( - ) \ To be used inside a fieldset
    <aHREF" +homelink +HTML| /home "| aria-label> hostname$ count <<strong>> </a> ;
@@ -495,7 +502,8 @@ $e7e7e7 constant ButtonWhite
 
 : logFile"    ( - adr$ cnt )    s" web.log"  Add/Tmp/Dir ;
 
-: PageLogs    ( - )   s" Last part of the logfile: " logFile" LoadHtmlFile ;
+: PageLogs   ( - )   s" Last part of the logfile: " logFile" LoadHtmlFile ;
+: Comment"   ( - adr cnt ) s" <strong> Comment: </strong>" ;
 
 : Html-title-header ( title$ cnt - )
     <title> hostname$ count +HTML space" +HTML +HTML </title>
@@ -514,7 +522,7 @@ $e7e7e7 constant ButtonWhite
    +HTML| <style> | svg_style-header
     s" a:link, a:visited {  cursor: pointer; } " +HTML
    95 14 +cssButton{}   \ Round buttons
-   +HTML|  fieldset { border:2px solid black } | 
+   +HTML|  fieldset { border:2px solid black } |
    +HTML| .vertslidecontainer [type="range"][orient="vertical"] { |
      +HTML| height: 200px; |
      +HTML| width: 70px; |
@@ -541,7 +549,7 @@ $e7e7e7 constant ButtonWhite
                 else   drop
                 then  </legend>
    +HTML| <font size="3" face="Segoe UI" color="#000000">|
-    10 10 0 4 Border <table>  ; ( w% h% cellspacing padding border -- )
+    10 10 0 4 Border  <table>  ; ( w% h% cellspacing padding border -- )
 
 : <<NoReferrer>> ( - )  +HTML| <meta name="referrer" content="never" /> | ;
 

@@ -1,18 +1,18 @@
-marker svg_plotter.f \ cr lastacf .name #19 to-column .( 10-11-2022 ) \ By J.v.d.Ven
-\ To plot SVG charts.
+marker -svg_plotter.f   \ By J.v.d.Ven 05-06-2024
+ \ To plot simple charts for a web client
 
+s" cforth" ENVIRONMENT?  [IF]  DROP  DECIMAL
 
-\ needs Web-server-light.f
-\ needs webcontrols.f
+needs /circular      extra.fth
+needs Html	     webcontrols.fth
 
-decimal
+[THEN]
 
+[undefined] /DataParms [if]
 
-s" /DataParms" $find nip 0= [IF]
-
-begin-structure /DataParms  \ For additional information about the various lines in an SVG-plot
-   field: >CfaDataLine      \ CFA of a pointer to get 1 data point (XY) of a line.
-   field: >CfaLastDataPoint \ CFA that gets the last data point of a line.
+begin-structure /DataParms  \ For additional information about the various fields for an SVG-plot
+   field: >CfaDataLine      \ CFA of a pointer to a field in the first record in the logfile
+   field: >CfaLastDataPoint \ CFA that gets the last data point in a plot.
   xfield: >FirstEntry
   xfield: >LastEntry
   xfield: >MinStat
@@ -25,13 +25,19 @@ end-structure
 : DataItem: ( <name> -- )  \ Define an inline record for additional information.
    /DataParms dup here swap allot dup value swap erase ;
 
+[then]
+
+
+DECIMAL HTML DEFINITIONS
+
+
+
+s" cforth" ENVIRONMENT?  [IF]  DROP  DECIMAL
 
 $00AF00 constant DkGreen
 $000000 constant Black
 
 [THEN]
-
-HTML DEFINITIONS
 
 \ Customizable:
 900 value SvgWidth     \ Total width  including the labels
@@ -158,10 +164,21 @@ Black   value color-x-labels
 : CalcAverage ( - ) ( f: - Average )  fTotal #added @ s>f f/ ;
 
 : MinMaxYf! ( f: n - )
-    fdup    MinYBot fmin to MinYBot
-    MaxYtop fmax to MaxYtop ;
+   fdup  MinYBot fmin to MinYBot
+   MaxYtop fmax to MaxYtop ;
 
 : Round10 ( f: Up/down-val n - rounded )  fswap f# 10e0 f* f+ fround f# 10e0 f/ ;
+
+: round-Y-area ( f: compression - )
+   f# 1e0 fmax
+    MinYBot fdup to MinYBotExact fover fover f0<
+         if   f*
+         else f/
+         then  f# -0.5e0 Round10  to MinYBot
+    MaxYtop fdup to MaxYtopExact  fdup f0<
+         if   fnip
+         else f*
+         then  f# 0.5e0 Round10  to MaxYtop ;
 
 : SetMinMaxY { #end #start ptr_data -- }
     ptr_data  dup >CfaDataLine @ to ptr_data
@@ -173,9 +190,7 @@ Black   value color-x-labels
        loop   \ Takes ALL data of the logfile in account within the plotted range
     #end #start rot
     dup dup >r >CfaLastDataPoint perform MinMaxYf! \ Including the optional LastDataPoint
-    r> >compression f@ f# 1e0 fmax
-    MinYBot fdup to MinYBotExact fover f/ f# -0.5e0 Round10  to MinYBot
-    MaxYtop fdup to MaxYtopExact       f*  f# 0.5e0 Round10  to MaxYtop
+    r> >compression f@  round-Y-area
     CalcAverage to Average ;
 
 : y-raster ( n - )
@@ -244,15 +259,16 @@ defer r>Date  ( - Relative_offset_to_date )
 
 : y-labels { x-cor y-cor color 'justify -- }
     #Max_Y_Lines  dup MaxYtop  MinYBot f- s>f f/ 1+ 0
-      do    f# 0e0 MinXBot f+   fover i s>f f* f# 0e0 fmax MinYBot f+
+      do    f# 0e0 MinXBot f+   fover i s>f f* f#  MinYBot f+
             x-cor y-cor color 'Justify y-label
       loop  fdrop ;
+
 
 : InitSvgPlot ( - )
     +HTML| <svg id="svgelem" width="| SvgWidth (.)  +html
     +HTML| " height="|  SvgHeight  (.)  +html
     +HTML| " xmlns="http://www.w3.org/2000/svg"> | ;
 
-forth definitions \ PREVIOUS
+FORTH DEFINITIONS
 
 \ \s

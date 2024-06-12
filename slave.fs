@@ -14,6 +14,10 @@ variable exit-chain
 defer KillTasks    ' noop is KillTasks
 ' KillTasks exit-chain chained
 
+0 value (standby)
+variable standby-chain
+
+
 2000 value ngettime \ Next time at 20:00
 : -name" \ Compiletime: ( - ) Runtime: ( - Name -cnt )
    last-lit, postpone name>string postpone negate ; immediate

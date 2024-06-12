@@ -9,9 +9,11 @@ needs mcp3008.fs
 defer Ldr@  ' LdrPos@ is Ldr@
 : Ldrf@% ( f: - %OfTotal ) Ldr@  Adc% ;
 
+[defined] NegateLdr [IF] ' LdrNeg@ is Ldr@  [THEN]
+
 \\\ EG:
 
-fdSpi 0= [if] initSpi [then]
+fdSpi 0= [if] initMcp3008 [then]
 
 cr .( Ldr: )  Ldrf@% f. abort
 

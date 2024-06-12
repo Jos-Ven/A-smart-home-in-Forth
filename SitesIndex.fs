@@ -1,19 +1,28 @@
 cr Marker SitesIndex.fs  .latest  \  Creates a master index
+\ You need to adapt this file for your sites.
 
 needs sitelinks.fs
 
-0 [IF]
 
-NOTES:
-sitelinks.fs is now build for _SensorWeb1.fs
-#IndexSite   in sitelinks.fs    points to the ID of the server that contains an index of all sites.
-MARKER SitesIndexOpt     \ to activate the index sites page
-MARKER AdminPage         \ Is also needed
-You need to adapt it for your sites.
+-1 value (pm25)  -1 value (Time_pm25)
+: +pm25 ( - )
+   (Time_pm25) 100 /mod mh>mh$ +html
+   +HTML|  pm2.5: |  (pm25) s>f 100e f/ (f.2) +html ;
 
+: (+.Inside) ( - )    GetTemperature +HTML| Inside: |  (n.1) +html  +HTML| <br>&nbsp;| ;
+
+defer (+.Outside) ' noop is (+.Outside)
+
+[UNDEFINED]  (+.Nightmode) [IF]
+: (+.Nightmode)  ( - ) ;
 [THEN]
 
 ALSO HTML
+
+0 [if] If needed, change downloaded SVG files from https://www.svgrepo.com/ as follows:
+       Insert: the width and height before  viewBox=".....
+       So it could looks like: width="150" height="150" viewBox=".....
+  [then]
 
 : svg-link (  page$ cnt #server - ) \ '</svg>' should be the latest added string in the htmlpage$ buffer
   htmlpage$ lcount dup 20 - /string s" </svg>" capssearch
@@ -24,13 +33,8 @@ ALSO HTML
   +HTML| <rect x="0" y="0" width="100%" height="100%" style="fill:currentcolor;fill-opacity:0.0;stroke-opacity:0.5"|
   s" /> " pagelink>  +HTML| </svg> | ;
 
-0 [if] Change downloaded SVG files from https://www.svgrepo.com/ as follows:
-       Insert: the width and height before  viewBox=".....
-       So it could looks like: width="150" height="150" viewBox=".....
-  [then]
-
 : NoteInputBox  ( - )
-    +HTML| <td <td colspan="3" width="100%" align="center"> |
+    +HTML| <td <td colspan="2" width="100%" align="center"> |
     <form>
             +HTML| <textarea maxlength="254" name="textarea" style="width:275px;height:90px;">|
                     s" note.txt" +hfile +HTML| </textarea>|
@@ -46,7 +50,6 @@ true value SavedNote
 create ShowActivity$ 12 allot s" Pc" ShowActivity$ place
 0 value LightsDB
 
-: 5cLine    ( - )    <tr>  5 <#tdC>  Blue 3 <hr> </td>  </tr>  ;
 
 0e fvalue HumidityIncrease
 
@@ -68,64 +71,149 @@ create ShowActivity$ 12 allot s" Pc" ShowActivity$ place
     else  <br-space>
     then ;
 
-: +Dashboard ( - )
-   5cLine
-   <tr>
-\       <td>  ShowActivity$ count +HTML <br-space>    </td>
-       <td>  ShowActivity$ count +HTML <br>  (PM25) 0>
+: <fieldset-style> ( - )  +HTML| <fieldset style=" border: 1px #6C7780 solid;border-radius: 3px;">| ;
+
+: 0<<td-legend>>  ( legend$ cnt - ) <td> <fieldset-style> <<legend>> ;
+
+: <<td-legend>>  ( legend$ cnt - ) <td> <fieldset-style>
+       HTML| <font size="2">| pad place
+s" <strong>"  pad +place
+ pad +place  s" </strong>"  pad +place s" </font>" pad +place pad count  <<legend>>  ;
+
+: <</td-legend>> ( - )             </fieldset>  </td> ;
+
+
+
+s" Documents/LinksSitesIndex.fs" file-status nip 0= [IF]
+
+NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row and Links-second-row
+
+[ELSE]
+
+: .SoundSystem ( - )
+\       File-SVG-pictogram                    Points to page    ServerId link
+        s" Home theater" <<td-legend>>
+           s" sound-system-svgrepo-com.svg" +hfile  s" /home"          0 svg-link
+          <br>  ShowActivity$ count +HTML <br>  (PM25) 0>
                 if    +pm25
                 else  .HtmlSpace
-                then  </td>
-       <td>  (+.Inside)  (+.Outside)  </td>
-       <td> (+.Nightmode)           </td>
-       <td> +HTML| Lights:| LightsDB
-              if    +HTML| On|
-              else  +HTML| Off|
-              then
-            <br-space>   </td>
-       <td> (+.Window)
-        +HumidityIncrease </td>
-   </tr>
-   5cLine ;
+                then
+    <</td-legend>> ;
+
+: .History ( - )
+    s" History" <<td-legend>>
+           s" thermometer-svgrepo-com.svg"  +hfile  s" /home"          FindOwnId svg-link
+           (+.Inside)  (+.Outside)
+    <</td-legend>> ;
+
+: .CentralHeating ( - )
+    s" Central heating"  <<td-legend>>
+           s" thermostat-svgrepo-com.svg"   +hfile  s" /CV%20menu"     FindOwnId svg-link
+           (+.Nightmode)
+    <</td-legend>> ;
+
+: .on/off ( flag - )
+    if    +HTML| On|
+    else  +HTML| Off|
+    then <br>
+ ;
+
+: .ControlLights ( - )
+    s" Lights"  <<td-legend>>
+           s" light-bulb-svgrepo-com.svg"   +hfile  s" /LightsControl" FindOwnId svg-link
+           [DEFINED] ControlLights [IF]
+           eval-light-net i_lights_automatic bInput@
+                if   .on/off +HTML| Automatic|
+                else .on/off +HTML| Manual|
+                then
+            [ELSE]   +HTML| Off| <br> +HTML| Manual| <br> .HtmlSpace
+            [THEN]
+
+    <</td-legend>> ;
 
 
-: Links-to-pages ( - ) \ Most visited pages. Should be adapted for your site. See .servers for the ServerId
-    100 100 0 4 0 <table>    ( w% h% cellspacing padding border -- )
-\ NwLine NwCell  File-SVG-pictogramm           Points to page  ServerId        EndCell
+: .ControlWindow ( - )
+    s" Window"  <<td-legend>>
+           s" window-svgrepo-com.svg"       +hfile  s" /WindowControl" FindOwnId svg-link
+           [DEFINED] ControlLights [IF]
+           i_window_Automatic bInput@
+                 if  eval-wnd-net
+                      if    +HTML| Open|
+                      else  +HTML| Close|
+                      then  <br> +HTML| Automatic|
+                 else  +HTML| Manual| <br> .HtmlSpace
+                 then
+                    ( +HumidityIncrease )
+           [ELSE]   +HTML| Off| <br> +HTML| Manual| <br> .HtmlSpace
+           [THEN]
+    <</td-legend>> ;
 
-   <tr>
-     <td>  s" sound-system-svgrepo-com.svg" +hfile  s" /home"       0  svg-link </td>
-     <td>  s" thermometer-svgrepo-com.svg"  +hfile  s" /home"       1  svg-link </td>
-     <td>  s" thermostat-svgrepo-com.svg"   +hfile  s" /CV%20menu"  1  svg-link  </td>
-     <td>  s" light-bulb-svgrepo-com.svg"   +hfile  s" /topframe.html?93=Extra" 0 svg-link </td>
-     <td>  s" window-svgrepo-com.svg"       +hfile  s" /home"       2  svg-link </td>
-           </td>
-   </tr>
-   +Dashboard
-   <tr>
-     <td>  s" linux-svgrepo-com.svg"        +hfile  s" /home"       9  svg-link  </td>   \ A linux PC
-     <td>  s" administrator-work-svgrepo-com.svg" +hfile s" /Admin" 1  svg-link  </td>
-     <td>  s" document-svgrepo-com.svg"     +hfile  s" /ModifyNote" 1  svg-link  </td>
-   SavedNote
-        if   s" note.txt"  3   <#tdC>   +hfile </td>
-        else   NoteInputBox
-        then
-   </tr> </table> ;
 
+
+: Links-first-row ( - )
+\ A page with links to an option or device.
+\ It uses ServerId's that are created in autogen_ip_table.fs
+\ To see a list try: .servers
+\ Each link uses one cell in a html-table consisting of:
+\ 1) A SVG-pictogram with a link to the page of the option/device.
+\ 2) 2 lines of additional text.
+    .SoundSystem
+    .History
+    [defined] CentralHeating [if] .CentralHeating  [then]
+    [defined] ControlLights  [if] .ControlLights   [then]
+    [defined] ControlWindow  [if] .ControlWindow   [then] ;
+
+
+: .Linux ( - )
+    s" Linux"  <<td-legend>>  \ A linux PC
+    s" linux-svgrepo-com.svg"           +hfile  s" /home"          9  svg-link
+    <</td-legend>> ;
+
+: .Administration ( - )
+    s" Rpi Administration"  <<td-legend>>
+    s" administrator-work-svgrepo-com.svg" +hfile s" /Admin"       FindOwnId  svg-link
+    <</td-legend>> ;
+
+: .Editnote ( - )
+    s" Edit note"  <<td-legend>>
+    s" document-svgrepo-com.svg"   +hfile  s" /ModifyNote"         FindOwnId  svg-link
+    <</td-legend>> ;
+
+: .SavedNote ( - )
+    SavedNote
+        if    2 <#tdC>  s" note.txt" +hfile   <br> NearWhite 300 4 <hrWH>
+              </td>
+        else  NoteInputBox
+        then ;
+
+: Links-second-row ( - )
+   .Linux
+   .Administration
+   .Editnote
+   .SavedNote ;
+
+[THEN]
+
+: Links-to-pages ( - ) \ Most visited pages. Should be adapted for your site.
+        +HTML| <table  style="   border-spacing: 15px 0; border-collapse: separate;"|
+        +HTML| border="0" cellpadding="0" height="100%" width="100%" >|
+        Links-first-row
+        <tr> <td> .HtmlSpace <td> </tr> \ seperator
+        <tr> Links-second-row  </tr> ;
 
 : .SitesIndex ( - )
     s" Main index " NearWhite 0 <HtmlLayout>    \ Starts a table in a htmlpage with a legend
-    <td> Links-to-pages   </td>
-    <tr> +HTML| <td align="left" valign="bottom">|
+    <td> Links-to-pages </td>
+    <tr> 4 <#tdL>
             +HTML| Favorites: |
             s" https://www.novabbs.com/devel/thread.php?group=comp.lang.forth" s" Clf" <<TopLink>> .HtmlSpace
             s" https://www.facebook.com/"                   s" Faceb."            <<TopLink>> .HtmlSpace
-            s" https://github.com/Jos-Ven?tab=repositories" s" Git JV"        <<TopLink>> .HtmlSpace
+            s" https://github.com/Jos-Ven?tab=repositories" s" Git JV"            <<TopLink>> .HtmlSpace
             s" https://www.rosettacode.org/wiki/Category:Forth" s" Rosetta Forth" <<TopLink>> .HtmlSpace
-            s" https://www.taygeta.com/fsl/sciforth.html"   s" SciForth"      <<TopLink>>
+            s" https://www.taygeta.com/fsl/sciforth.html"   s" SciForth"          <<TopLink>>
          <br> +Arplink s" /UpdateLinksIndex"  Sitelinks
          </td>
-    +HTML| <td align="right" valign="bottom">| .GforthDriven </td></tr>
+     +HTML| <td align="right" valign="bottom">|  .GforthDriven  </td> </tr>  </table>
     <EndHtmlLayout> ;
 
 : SaveNote ( adr n -  )
@@ -135,7 +223,6 @@ create ShowActivity$ 12 allot s" Pc" ShowActivity$ place
        else  2drop
        then
      ;
-
 
 s" note.txt" file-status nip
   [if]
@@ -152,12 +239,12 @@ TCP/IP DEFINITIONS
 
 : /SitesIndex  ( - )  ['] .SitesIndex set-page ;
 ' /SitesIndex         alias /UpdateLinksIndex
-: /ModifyNote  ( - )    SavedNote not to SavedNote /SitesIndex ;
+: /ModifyNote  ( - )  SavedNote not to SavedNote /SitesIndex ;
 : textarea     ( <HtmlTxt>- )  parse-name SaveNote /SitesIndex ;
 
 : Gforth::HumIncrease ( - ) udpin$ lcount OnHumIncrease Ignore-remainder ;
-: Gforth::LightsON  ( - ) udpin$ lcount  SendConfirmation true  to LightsDB Ignore-remainder ;
-: Gforth::LightsOFF ( - ) udpin$ lcount  SendConfirmation false to LightsDB Ignore-remainder ;
+: Gforth::LightsON    ( - ) udpin$ lcount  SendConfirmation true  to LightsDB Ignore-remainder ;
+: Gforth::LightsOFF   ( - ) udpin$ lcount  SendConfirmation false to LightsDB Ignore-remainder ;
 
 
 FORTH DEFINITIONS

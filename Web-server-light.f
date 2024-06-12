@@ -26,6 +26,10 @@ Last tested under:
 
 15-04-2024  - Most important: Adapted ShGet to solve a memory leak
 
+02-06-2024  - Made _SensorWeb1.fs more flexible. A number of sensors are now optional.
+              You can now also add your own sensors and see their historical data.
+            - Added multiport gates to monitor and handle complicated decisions.
+            - Changed LowLightLevel to ControlLights.
 [then]
 
 needs Common-extensions.f
@@ -193,7 +197,7 @@ synonym Add/Tmp/Dir noop
       dup 0>  \ errors?
               if  2dup s" TCP/IP" LogRequest handle-request  \ Act on the received packet
                else     if    log" No data from read-socket."
-                        else  log" read-socket failed."              \ zero pack
+                        else  log" read-socket failed."
                         then  drop
                then ;
 
@@ -287,13 +291,14 @@ cell newuser depth-target
 
 : .catch-error ( adr len errcode - ) \ The line after the separators are removed.
    >r cr ." ******* Request aborted! ******* "
-\in-system-ok  cr .date space .time  ." Order: " order    \ Words must be defined in the TCP/IP dictionary !
+\in-system-ok  cr .date space .time  ."  Order: " order    \ Words must be defined in the TCP/IP dictionary !
     cr ." Error at: " 2dup  type
+    2dup dump
     r> warnmsg
     StartHeader             \ Put the error on the html-page
     +html| <body bgcolor="#FEFFE6"><font size="4" face="Segoe UI" color="#000000" ><BR> |
     +html| <br> | (date) +html  s"  " +html (time) +html
-    +html| <br> <br> Sorry, the page you requested cannot be found.|
+    +html| <br> <br> Page error.|
     +html| <br> <br> Error 404 at: | +html
     +html| <br> For web page: |
     xt-htmlpage @ dup 0<>
@@ -322,7 +327,9 @@ cell newuser depth-target
        then
     sp@ sp0 @ <>
         if  len 0>
-               if  adr len .err-msg
+               if  adr len
+                   2dup dump
+                   .err-msg
                then
             trim-stack   \ The stack should be empty without trimming it
         then
@@ -386,7 +393,7 @@ Create homelink$ 0 c, 255 chars allot
 
 S" gforth" ENVIRONMENT? [IF] 2drop
 
-cr cr
+cr
 .( Linux: )  OsVersion" type cr
 .( Dir: )    upad 255 get-dir type cr
 
@@ -514,6 +521,34 @@ variable init-webserver-gforth-chain
        SplitVersion (.) +upad  s" ." +upad  (.) +upad
     init-webserver-gforth-chain chainperform ;
 
+: linger-tcp ( fileno - )   SO_LINGER 1 sp@ 2 cells SetSolOpt ;
+: NoTcpDelay ( tcp-sock - ) TCP_NODELAY 1 dup cell SetSolOpt ;
+
+
+: (SendTcp) ( msg$ cnt #server -- res|#send )    \ 0: connection failed
+    >r s" TCP/IP: ---> " upad place   2dup +upad s"  @" +upad r@ (.) +upad  upad"  +log
+    r@ open#Webserver dup 0=
+       if    3drop r@ host-id>#server r>Online off
+             r>  (.) upad place s"  can not be reached." +upad" +log false
+       else  dup>r fileno  dup reuseaddr dup NoTcpDelay linger-tcp
+             SOCK_CLOEXEC r@ SetMode
+             r@ send-packet r>  close-socket r> drop
+       then  ;
+
+
+: SendTcp ( msg$ cnt #server -- res|#send )     \ 0: connection failed
+    CheckGateway
+      if    (SendTcp)
+      else  3drop log" No gateway." 0
+      then ;
+
+: SendTcpInBackground ( msg$ cnt #server --  )     \ result in: >Online
+    3 stacksize4 NewTask4 pass dup>r SendTcp r> r>Online ! ;
+
+: Ask-StandBy ( - )
+   FindOwnId 1 =
+     if s" GET Ask-StandBy" 0 (SendTcp) drop
+     then ;
 
 : LockConsole ( - )
   cr ." Console locked till ^c" cr
@@ -532,11 +567,9 @@ variable init-webserver-gforth-chain
       dup 0>  \ errors?
               if  2dup s" TCP/IP" LogRequest handle-request    \ Act on the received packet
                else     if    log" No data from read-socket."
-                        else  log" read-socket failed."        \ zero pack
+                        else  log" read-socket failed."
                         then  drop
                then ;
-
-: NoTcpDelay ( tcp-sock - ) TCP_NODELAY 1 dup cell SetSolOpt ;
 
 : FindSender ( &Packet cnt - #server flag )     \ &Packet cnt should contain @numberBL
     [char] @ bl  ExtractNumber? >r d>s abs r> ;
@@ -552,7 +585,11 @@ variable init-webserver-gforth-chain
      else   2drop false
      then  ;
 
-: ShutdownTCPConnection ( aSock - ) dup ShutdownConnection close drop ;
+: ShutdownTCPConnection ( aSock - )
+   dup
+     if    dup ShutdownConnection close drop
+     else  drop
+     then ;
 
 : .LinuxError ( n - )
    -1 =
@@ -568,8 +605,6 @@ variable init-webserver-gforth-chain
            then
         4 ms
    loop  req-buf ! req-buf lcount ;
-
-: linger-tcp ( fileno - )  SO_LINGER 1 sp@ 2 cells SetSolOpt ;
 
 : handle-web-packet ( aSock - )
    dup fd>file  aSock !
@@ -702,7 +737,8 @@ allocate-buffers
                                   [ELSE]  close-socket
                                   [THEN]
                   else 2drop
-                  then  htmlpage$ off
+                  then
+      htmlpage$ off 25 ms
       repeat 2drop  bye ;
 
 : Starting-http-server ( -- )  ServerHost r>port @ http-server ;
@@ -796,26 +832,6 @@ FORTH DEFINITIONS
 : ((Bye))         ( -- )
    log" Bye, Forth." bye-page  send-last-packet
    s" sudo ./kf.sh" system ;
-
-: (SendTcp) ( msg$ cnt #server -- )    \ No checks Using: SOCK_STREAM (TCP/IP)
-    >r s" TCP/IP: ---> " upad place   2dup +upad s"  @" +upad r@ (.) +upad  upad"  +log
-    r@ open#Webserver dup 0=
-       if    3drop r@ r>Online off
-             r>  (.) upad place s"  can not be reached." +upad" +log
-       else  dup>r fileno  dup reuseaddr linger-tcp
-             SOCK_CLOEXEC r@ SetMode
-             r@ send-packet drop r>  close-socket r> drop
-       then  ;
-
- : SendTcp ( msg$ cnt #server -- )     \ With checks Using: SOCK_STREAM (TCP/IP)
-    CheckGateway
-      if  host-id>#server dup r>Online @
-          if   (SendTcp)
-          else  (.) upad place s"  is offline." +upad" +log 2drop
-          then
-      else  3drop drop log" No gateway."
-      then ;
-
 
 200 constant MsWaitTimeConfirmation    \ There schould be a response within 200 ms
 50 constant MsWaitUnit
@@ -1021,7 +1037,7 @@ defer udp-requests  ( adr len --)
      then
    start-web-server 200 ms
    PingTcpServers
-   [ [DEFINED] LockConsole ]    [IF] LockConsole ." console NOT locked"  [THEN]
+   [ [DEFINED] LockConsole ]    [IF] Ask-StandBy LockConsole ." console NOT locked"  [THEN]
  ;
 
 

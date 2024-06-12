@@ -1,5 +1,5 @@
 needs slave.fs             \ For restarting / updating it self. 20-4-2023
-marker Master.fs  .latest
+cr marker Master.fs  .latest
 needs autogen_ip_table.fs  \ Set parameters first at the start of autogen_ip_table.fs
 
 \ A system can be Offline. That happens when it could not be pinged
@@ -239,9 +239,12 @@ Needs SetVersionPage.fs
   s" Reboot"   5 <<UpdateButtonOption>>
   s" Shutdown" 6 <<UpdateButtonOption>>
   s" TimeSync"   <<UpdateButton>>
-       <tdL> HTML| Time sync. to network| +HtmlNoWrap </td></tr>
+       <tdL> HTML| Time sync. to network.| +HtmlNoWrap </td></tr>
   s" Execute"    <<UpdateButton>>
-       <tdL> HTML| Execute the linux script on this system. | +HtmlNoWrap </td></tr> ;
+       <tdL> HTML| Execute the linux script on this system. | +HtmlNoWrap </td></tr>
+       <tr> <tdL> s" Shutdown" s" AskShutDownPage"  <CssButton>  </td>
+             <tdL> +html| Shutdown master.|  </td></tr>
+        ;
 
 : AdminLink    ( - ) <aHREF" +homelink  +HTML| /Admin ">|  +HTML| Administration | </a> ;
 
@@ -293,7 +296,7 @@ Needs SetVersionPage.fs
      date-now sunrise +fd>Udp-line2$
      date-now sunset  +fd>Udp-line2$
    s" TcpTime HTTP/1.1" UdpOut$ +place
-   UdpOut$ count rot  SendTcp ;
+   UdpOut$ count rot  SendTcp drop ;
 
 : SendTCPTimesyncToAll ( - )
     #servers 0

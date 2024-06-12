@@ -22,8 +22,7 @@ Advantages:
 
 s" win32forth" ENVIRONMENT? [IF] DROP
    dup-warning-off sys-warning-off
-   font NewFont  18 height: NewFont   NewFont SetFont: cmd
-   synonym es reset-stacks
+\   cls font NewFont  18 height: NewFont  NewFont SetFont: cmd   synonym es reset-stacks
 [then]
 
 
@@ -87,11 +86,12 @@ s" win32forth" ENVIRONMENT? [IF] DROP
    create dup , swap dup , 1+ swap
    does> 2@ ;   \ Run-time: ( - input# &multiport )
 
-: bInput@    ( input# &multiport - input-value ) @ swap test-bit abs ;
-: bInput!    ( flag input# &multiport - )  dup >r @ -rot bit! r> ! ;
-: bInputon   ( input# &multiport - )      1 -rot bInput! ;
-: bInputoff  ( input# &multiport - )      0 -rot bInput! ;
-: .bInput    ( input# &multiport - )      over . bInput@ .  ;
+: bInput@     ( input# &multiport - input-value ) @ swap test-bit abs ;
+: bInput!     ( flag input# &multiport - )  dup >r @ -rot bit! r> ! ;
+: bInputon    ( input# &multiport - )      1 -rot bInput! ;
+: bInputoff   ( input# &multiport - )      0 -rot bInput! ;
+: .bInput     ( input# &multiport - )      over . bInput@ .  ;
+
 : .inputs    ( #inputs &inputs - )
    cr ." # Input"  swap 1st-bInput
      do    i over cr .bInput

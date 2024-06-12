@@ -1,13 +1,12 @@
-Marker bme280.fs       \ Ported from python.
+Marker bme280.fs  .latest     \ Ported from python.
 require unix/libc.fs
 require wiringPi.fs
 require Common-extensions.f
 
+\ Settings:
+\  To detect the i2c address:   $ sudo i2cdetect -y 1
 \  To compensate for PCB temperature, sensor element self-heating and ambient temperature:
 -2.0e fvalue ftemp-trim
-
-\    I2C ADDRESS DEFINITIONS
-\ sudo i2cdetect -y 1
 
 0x76 constant BME280_I2C_ADDRESS1 0x77 constant BME280_I2C_ADDRESS2
 
@@ -15,18 +14,40 @@ require Common-extensions.f
 0x00 constant BME280_SLEEP_MODE   0x01 constant BME280_FORCED_MODE
 0x03 constant BME280_NORMAL_MODE  0xB6 constant BME280_SOFT_RESET_CODE
 
+
+0xF2 constant BME280_CTRL_HUMIDITY_REG        \ Ctrl Humidity Register
+0xF5 constant BME280_CONFIG_REG               \ Configuration Register
 0xD0 constant BME280_CHIP_ID_REG              \ Chip ID Register
+
+0 value bme280_i2c_address      0 value fdBme280
+
+: ?IorCodeBme280 ( result - result ior )
+   dup  -1 =  if  dup  -512 errno - .error space else  0  then ;
+
+: Set_Bme280_Address ( bme280_i2c_address - fd ior )
+   dup wiringPiI2CSetup ?IorCodeBme280  rot to bme280_i2c_address ;
+
+: SetupBme280 ( - fd )
+   BME280_I2C_ADDRESS2           Set_Bme280_Address  ?IorCodeBme280 2drop
+   dup BME280_CONFIG_REG                0            wiringPiI2CWriteReg8 ?IorCodeBme280 2drop
+   dup BME280_CTRL_HUMIDITY_REG  BME280_FORCED_MODE  wiringPiI2CWriteReg8 ?IorCodeBme280 2drop ;
+
+: ChipId@ ( fd - id ) BME280_CHIP_ID_REG wiringPiI2CReadReg8 ;
+
+CheckI2c 0=  [IF] cr cr .( ERROR. The needed I2c interface is NOT activated!  ok ) abort cr [then]
+
+SetupBme280 dup to fdBme280  ChipId@ 0>
+[IF]  \ Compiling when detected:
+
+
 0xE0 constant BME280_RST_REG                  \ Softreset Register
 0xF3 constant BME280_STAT_REG                 \ Status Register
 0xF4 constant BME280_CTRL_MEAS_REG            \ Ctrl Measure Register
-0xF2 constant BME280_CTRL_HUMIDITY_REG        \ Ctrl Humidity Register
-
-0xF5 constant  BME280_CONFIG_REG              \ Configuration Register
 
 \ OVER SAMPLING DEFINITIONS
 0x00 constant BME280_OVERSAMP_SKIPPED 0x01 constant BME280_OVERSAMP_1X
-0x02 constant BME280_OVERSAMP_2X     0x03 constant BME280_OVERSAMP_4X
-0x04 constant BME280_OVERSAMP_8X     0x05 constant BME280_OVERSAMP_16X
+0x02 constant BME280_OVERSAMP_2X      0x03 constant BME280_OVERSAMP_4X
+0x04 constant BME280_OVERSAMP_8X      0x05 constant BME280_OVERSAMP_16X
 
 \  CALIBRATION REGISTER ADDRESS DEFINITIONS
 0x88 constant BME280_TEMPERATURE_CALIB_DIG_T1_LSB_REG
@@ -72,20 +93,6 @@ require Common-extensions.f
 0x03 constant BME280_FILTER_COEFF_8
 0x04 constant BME280_FILTER_COEFF_16
 
-0 value bme280_i2c_address
-
-: ?IorCodeBme280 ( result - result ior )
-   dup  -1 =  if  dup  -512 errno - .error space else  0  then ;
-
-: Set_Bme280_Address ( bme280_i2c_address - fd ior )
-   dup wiringPiI2CSetup ?IorCodeBme280  rot to bme280_i2c_address ;
-
-: SetupBme280 ( - fd )
-   BME280_I2C_ADDRESS2           Set_Bme280_Address  ?IorCodeBme280 2drop
-   dup BME280_CONFIG_REG                0            wiringPiI2CWriteReg8 ?IorCodeBme280 2drop
-   dup BME280_CTRL_HUMIDITY_REG  BME280_FORCED_MODE  wiringPiI2CWriteReg8 ?IorCodeBme280 2drop ;
-
-: ChipId@ ( fd - id ) BME280_CHIP_ID_REG wiringPiI2CReadReg8 ;
 : .ChipId ( fd - )   ." ChipId: "  ChipId@ ?IorCodeBme280 drop h. ;
 
 : DumpBme280  ( fd - )
@@ -174,6 +181,8 @@ require Common-extensions.f
 
 : ReadCalibrations ( fd - )  dup digT dup digH digP ;
 
+fdBme280  ReadCalibrations
+
 0e fvalue var1      0e fvalue var2
 0  value t_fine     0e fvalue humidity  0e fvalue pressure
 
@@ -231,8 +240,6 @@ require Common-extensions.f
      else drop 0e 0e 0e
      then ;
 
-: InitBme280 ( - fd-Bme280 ) SetupBme280  dup ReadCalibrations ;
-
 : 2f.        ( F: n - ) 7 2 0 f.rdp space ;
 
 : .bme280    ( fd-Bme280 - )
@@ -241,28 +248,15 @@ require Common-extensions.f
    6 set-precision  cr ."    Pressure : " 2f. ." hPa"
    4 set-precision  cr ."    Humidity : " 2f. ." %" ;
 
+ bme280_i2c_address cr .(   I2c addres: ) h. 2 spaces
+ fdBme280  .ChipId fdBme280 .bme280
 
+\ Output:
+\   I2c addres: 77   ChipId: 60
+\ Temperature :   25.68 C
+\    Pressure : 1018.14 hPa
+\    Humidity :   49.25 %
 
- 0 value fdBme280
+[ELSE] cr .( No Bme280 sensor detected!)
+[THEN]
 
-CheckI2c
-     [IF]    cr cr .( Bme280: )
-             InitBme280 dup to fdBme280  ChipId@ 0>
-             [IF]   bme280_i2c_address
-                    cr .(   I2c addres: ) h. 2 spaces
-                    fdBme280  .ChipId fdBme280 .bme280
-             [ELSE] cr .( No Bme280 sensor detected!)
-             [THEN]
-     [ELSE]  cr cr .( The I2c interface is NOT activated!) cr
-     [THEN]
-
-\ 111 135 128 dbg raw_temp>f abort
-
-\\\ Output:
-
-  I2c addres: 77   ChipId: 60
-Temperature :   25.68 C
-   Pressure : 1018.14 hPa
-   Humidity :   49.25 %
-
-\\\

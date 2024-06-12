@@ -6,6 +6,8 @@ Marker SensorWeb2.fs
 
 false value S5? \ to detect my S5
 
+also html
+
 : JavaRefresh ( - )
    +HTML| <script langauge="javascript"> window.setInterval("refreshDiv()", 10000); |
    +HTML| function refreshDiv(){ |
@@ -70,7 +72,7 @@ false value S5? \ to detect my S5
    LtMangenta      &Pressure    >Color !
    lightSlateBlue  &Humidity    >Color !
    Red             &Temperature >Color !
-   Yellow          &Light       >Color !
+   DkYellow        &Light       >Color !
    Green  dup      &Pollution   >Color ! to color-y-labels-right
    NearWhite to color-x-labels ;
 
@@ -98,7 +100,7 @@ false value S5? \ to detect my S5
     #LastMin find-interval svg_plot
     <br>
     vsFont lightSlateBlue s" Humidity, "          <<FontSizeColor>>
-    vsFont Yellow         Light" [char] , addchar <<FontSizeColor>>
+    vsFont DkYellow       Light" [char] , addchar <<FontSizeColor>>
     vsFont LtMangenta     s" Pressure,"          <<FontSizeColor>>
     vsFont Green          Pollution"   bl addchar <<FontSizeColor>>
     vsFont Red            s" and Temperature."    <<FontSizeColor>>
@@ -115,8 +117,8 @@ false value S5? \ to detect my S5
           BfSize  SfSize
           over lightSlateBlue HumiditySamples AverageSamples (f.2) <<FontSizeColor>>
           dup  lightSlateBlue s" &nbsp;%"   <<FontSizeColor>>  greenHr
-          over Yellow      LdrSamples         AverageSamples (f.2) <<FontSizeColor>>
-          dup  Yellow      (HtmlSpaceStart)   LightUnitOnly"      drop 1  ((inlude$))   <<FontSizeColor>>  greenHr
+          over DkYellow    LdrSamples         AverageSamples (f.2) <<FontSizeColor>>
+          dup  DkYellow    (HtmlSpaceStart)   LightUnitOnly"      drop 1  ((inlude$))   <<FontSizeColor>>  greenHr
           over Green       PollutionSamples   AverageSamples (f.2) <<FontSizeColor>>
           dup  Green       (HtmlSpaceStart)   PollutionUnitOnly"  drop 1  ((inlude$))   <<FontSizeColor>>  greenHr
           over LtMangenta  PressureSamples    AverageSamples (f.2) <<FontSizeColor>>
@@ -202,7 +204,7 @@ false value S5? \ to detect my S5
 
 : DetectS5 ( webpacket$ cnt - ) req-buf lcount s" Safari/534.30" search to S5? 2drop ;
 
-: Dynpage ( w h xt -  ) 
+: Dynpage ( w h xt -  )
    >r MapBme280Data 2>r DetectS5 GetViewport $0 to ColorOff   RefreshCmd
     +HTML|  <body style="background-color:#000000">|
     WidthViewPort 90 %  HeightViewPort 75 % 0 0 0 <tablePx> S5?  \ The Outer table. One cell is used

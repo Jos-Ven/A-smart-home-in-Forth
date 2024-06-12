@@ -8,7 +8,6 @@ needs multiport_gate.f
            bInput: i_Automatic \ 2
 >#bInputs c!                   \ 3
 
-
 2variable gui-mp
 0 gui-mp bInput: i_Mode        \ 0
          bInput: i_Override    \ 1

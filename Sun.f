@@ -24,7 +24,7 @@
 \ Moved time related calculations to TimeDiff.f
 
 needs TimeDiff.f
-Marker Sun.f
+Marker Sun.f .latest 
 
 \ -- For use with standard ANS Forth, uncomment line below:
 

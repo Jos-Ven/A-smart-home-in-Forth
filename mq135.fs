@@ -14,7 +14,7 @@ needs mcp3008.fs
 
 CheckSPI
    [IF]   fdSpi 0=
-            [IF] initSpi
+            [IF] initMcp3008
             [THEN]
           cr cr .( MQ135: )
           cr Mq135Raw@ .(  Raw: ) . Mq135f@ .( RelativeValue: ) f.

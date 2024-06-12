@@ -40,7 +40,7 @@ ALSO HTML
 
 : .helpCv ( - )
   +HTML| <font size="2">|
-   HTML| Abstract:| <<strong>> <br>
+   Comment" +HTML <br>
    i_Automatic@
       if    +HTML| Between | StartTimeOutTempLimit @ .html
             +HTML|  and | EndTimeOutTempLimit @ .html
@@ -53,10 +53,11 @@ ALSO HTML
       then
    </font> ;
 
-: +Nightmode ( -)    CvNight \State  flag1/0  if +HTML| on|  else  +HTML| off|  then ;
+: +Nightmode ( -)    CvNight \State  flag1/0  if +HTML| On|  else  +HTML| Off|  then ;
 
 : .StatisticsCv ( - )
-     <tdLTop> <fieldset>  s" Statistics" <<legend>>
+     <tdLTop> <fieldset>
+              <legend> <aHREF" +homelink  +HTML| /CV%20menu">| +HTML| Statistics | </a> </legend>
      </form> <form>
      100 230 0 4 1 <tablepx>   ( wPx hPx cellspacing padding border -- )
          <tr><td>  HTML| Item|  <<strong>> </td>
@@ -94,7 +95,7 @@ ALSO HTML
               </td> <tdL> i_Automatic@
                           OnOffColors s" Job"   nn" <StyledButton> </td></tr>
           <tr><tdL> ( out-mp fire ) OnOffColors s" Thermostat"   nn" <StyledButton>
-              </td> <tdL>  s" Shutdown" s" AskShutDownPage"  <CssButton>  </td></tr>
+              </td> <tdL> .HtmlSpace </td></tr>
           <tr><tdL> .HtmlSpace </td></tr>
       </table> </fieldset> </td> ;
 
@@ -123,17 +124,16 @@ ALSO HTML
     i_Automatic bInputOff
     eval-ch-net dup set-cv  out-mp >last-out c! ;
 
-: SetStandby ( f - )
-    dup
-      if    log" Starting standby"  \ When you are going away.
-      else  log" Standby cancelled" \ When you are getting at home.
-      then  not i_Present bInput!  ;
+: SetStandby-cv ( - )
+     (standby) not dup
+      if    log" Standby cancelled" \ When you are getting at home.
+      else  log" Starting standby"  \ When you are going away.
+      then  i_Present bInput!  eval-ch-net set-cv  ;
 
-true SetStandby
+SetStandby-cv
 
-: OnStandby ( parm from  - )
-   drop \  SendConfirmation
-   SetStandby ;
+' SetStandby-cv standby-chain chained
+
 
 : SwitchNightservice ( flag - )
    dup out-mp  >last-out c@ 0<> <>
@@ -175,6 +175,5 @@ ALSO TCP/IP DEFINITIONS \ Adding the page and it's actions to the tcp/ip diction
    parse-time  StartTimeOutTempLimit ! parse-time  EndTimeOutTempLimit ! ;
 
 FORTH DEFINITIONS PREVIOUS PREVIOUS
-
 \s
 

@@ -30,7 +30,7 @@ Marker avsampler.fs \ To collect samples from sensors and to calculate the avara
       else  >sample  1 max
       then  s>f f/ ;
 
-\ [undefined] /DataParms [if]
+[undefined] /DataParms [if]
 
 \in-system-ok begin-structure /DataParms  \ For additional information about the various fields for an SVG-plot
    field: >CfaDataLine      \ CFA of a pointer to a field in the first record in the logfile
@@ -47,7 +47,7 @@ end-structure
 : DataItem: ( <name> -- )  \ Define an inline record for additional information.
 \in-system-ok   /DataParms dup here swap allot dup value swap erase ;
 
-\ [then]
+[then]
 
 \\\ EG:
 Samples: testsamples

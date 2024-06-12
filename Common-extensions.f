@@ -74,6 +74,8 @@ maxcounted 1+ newuser upad    \ needs to be multi user from this point
     utmp$ off time&date 3drop
     ## [char] : +##   [char] : +##  utmp" ;
 
+: yearToday ( - ) time&date >r 2drop 2drop drop r> ;
+
 : close-log-file ( - ) hlogfile 0<> if hlogfile CloseFile 0 to hlogfile then ;
 
 : write-log-line ( adr cnt - )
@@ -418,6 +420,12 @@ synonym pause      winpause
 : (f.2) ( f -- ) ( -- c-addr u )   100e  f>dint <# # # .#-> ;
 : (f.3) ( f -- ) ( -- c-addr u )   1000e f>dint <# # # # .#-> ;
 
+: (n.1) ( n -- ) ( -- c-addr u )
+   dup 0<
+     if    abs -1
+     else  0
+     then  swap s>d <# # .#-> ;
+
 : tcrc ( tsum char -- tsum2 ) 8 lshift xor     \ lshift = shl   (( n N -> shl -> n ))
    8 0 do  dup 0x7fff >
           if    1 lshift  0xffff and 0x1021 xor
@@ -432,9 +440,7 @@ synonym pause      winpause
 
 cr .date space .time
 
-s" Documents/MachineSettings.fs" file-status nip 0= [if]
-            needs Documents/MachineSettings.fs    \ =optional to override settings
-            [THEN]
+
 \s
 
 
