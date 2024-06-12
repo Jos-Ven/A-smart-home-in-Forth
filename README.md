@@ -19,10 +19,16 @@ The Web-server-light runs best under Linux on a Raspberry Zero W.
 A PC with Linux (Bookworm) or PC with Windows10/11 can also be used.
 
 Read the Installation guide for the details.
-Here is how a smart home may look under Linux:
+Here is how a smart home may look under Linux when _SensorWeb1.fs is compiled with the option SitesIndexOpt active:
 
 ![01_ScreenShot](https://github.com/Jos-Ven/A-smart-home-in-Forth/assets/47664564/6e1347e7-d738-40e5-bccf-d34910833473)
 
--
+
 ![02_ScreenShot](https://github.com/Jos-Ven/A-smart-home-in-Forth/assets/47664564/094546f4-3e19-447e-9fbc-f9676bee5250)
+
+A multi port gate:
+
+![04_ScreenShot](https://github.com/Jos-Ven/A-smart-home-in-Forth/assets/47664564/7731ace1-5a45-4702-9653-5d4201979c6f)
+
+
 
