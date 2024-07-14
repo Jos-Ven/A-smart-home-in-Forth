@@ -293,7 +293,6 @@ cell newuser depth-target
    >r cr ." ******* Request aborted! ******* "
 \in-system-ok  cr .date space .time  ."  Order: " order    \ Words must be defined in the TCP/IP dictionary !
     cr ." Error at: " 2dup  type
-    2dup dump
     r> warnmsg
     StartHeader             \ Put the error on the html-page
     +html| <body bgcolor="#FEFFE6"><font size="4" face="Segoe UI" color="#000000" ><BR> |
@@ -732,13 +731,13 @@ allocate-buffers
                   if  IP-adress-allowed?
                         if    dup handle-web-packet   \ aSock
                         else  log" IP-adress not allowed!"
-                        then   [DEFINED]  fd>file
+                        then  [DEFINED]  fd>file
                                   [if]    ShutdownTCPConnection
                                   [ELSE]  close-socket
                                   [THEN]
                   else 2drop
                   then
-      htmlpage$ off 25 ms
+      5 ms  htmlpage$ off
       repeat 2drop  bye ;
 
 : Starting-http-server ( -- )  ServerHost r>port @ http-server ;

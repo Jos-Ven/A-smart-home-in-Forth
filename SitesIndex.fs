@@ -112,7 +112,7 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
            (+.Nightmode)
     <</td-legend>> ;
 
-: .on/off ( flag - )
+: .on/off-html ( flag - )
     if    +HTML| On|
     else  +HTML| Off|
     then <br>
@@ -123,8 +123,8 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
            s" light-bulb-svgrepo-com.svg"   +hfile  s" /LightsControl" FindOwnId svg-link
            [DEFINED] ControlLights [IF]
            eval-light-net i_lights_automatic bInput@
-                if   .on/off +HTML| Automatic|
-                else .on/off +HTML| Manual|
+                if   .on/off-html +HTML| Automatic|
+                else .on/off-html +HTML| Manual|
                 then
             [ELSE]   +HTML| Off| <br> +HTML| Manual| <br> .HtmlSpace
             [THEN]

@@ -1,12 +1,13 @@
 needs multiport_gate.f
 needs cHeating_mpn.f    \ For i_Present
+marker LightsControl.fs
 
 
 \ -------------- Settings --------------
 
 f# 2.0e fvalue ldr_lights_low       f# 3e0 fvalue ldr_lights_high
-    90  value MinutesBeforeSunSet    0300  value reset_time_lights
-     0  value lights-#changes           1  value lights-#changes-max
+    90  value MinutesBeforeSunSet    1000  value reset_time_lights
+     0  value lights-#changes           2  value lights-#changes-max
 
 
 : day-profile   ( - ) f# 2.0e  to ldr_lights_low  f# 3e0  to ldr_lights_high ;
@@ -61,6 +62,7 @@ f# 2.0e fvalue ldr_lights_low       f# 3e0 fvalue ldr_lights_high
         if    time>mmhh reset_time_lights >   \ time to reset?
                   if   i_lights_sunset bInputOff r@ to day-lights
                        day-profile 0 to lights-#changes
+                       i_lights_Ldr bInputOff
                   then
         else  i_lights_#changes  bInput@      \ same day
                if  sunset-still-today?
@@ -72,7 +74,7 @@ f# 2.0e fvalue ldr_lights_low       f# 3e0 fvalue ldr_lights_high
          then  r> drop ;
 
 
-: inq-lights-#changes ( - )  lights-#changes lights-#changes-max <= i_lights_#changes bInput! ;
+: inq-lights-#changes ( - )  lights-#changes lights-#changes-max < i_lights_#changes bInput! ;
 
 : eval-light-net ( - flag )
    inq_ldr_lights inq-lights-#changes inq_light_Hours_1_time
@@ -93,7 +95,7 @@ create Lightchange$ 20 allot
 
 Lightchange s" :Started." Lightchange$ +place
 
-: lights-on/off ( - )
+: lights-on/off ( - ) \ Used at EachMinuteJob in job_support.fs
    eval-light-net dup previous-state-lights <>
      if  Lightchange dup to previous-state-lights
           if     night-profile ['] LightsOn s" :On" Lightchange$ +place
@@ -115,8 +117,6 @@ ALSO HTML
    <td> HTML| Off |    <<strong>> </td> ;
 
 : Lights-data ( - )
-    eval-light-net
-
   <tr> <tdL> +HTML| ldr% | </td>
       <td>  i_lights_Ldr bInput@ .html </td>
       <tdR> Ldrf@%   .fHtml </td>
@@ -150,7 +150,7 @@ ALSO HTML
    </tr>
 
    <tr> <tdL> +HTML| Result | </td>
-        <td>   i_lights_automatic bInput@
+        <td>   i_lights_automatic bInput@ dup
                   if     abs .Html
                   else   drop +HTML| - |
                   then   </td>
@@ -179,7 +179,7 @@ ALSO HTML
       loop
     </td> </tr> ;
 
-: LightsControl  ( - )
+: lights-control  ( - )
       s" LightsControl" NearWhite 0 <HtmlLayout>
        <tdLTop> <fieldset>
                 <legend> <aHREF" +homelink  +HTML| /lightscontrol">| +HTML| Statistics | </a> </legend>
@@ -204,8 +204,7 @@ ALSO HTML
 
 ALSO TCP/IP DEFINITIONS
 
-: 200Down        ( - )  3 to lights-#changes ;
-: /lightscontrol ( - )  ['] LightsControl set-page  ;
+: /LightsControl ( - )  ['] lights-control set-page  ;
 : AutoLight      ( - )  0 to lights-#changes i_lights_automatic invert-bit-input ;
 
 : AutoLightOn    ( - )
@@ -214,7 +213,9 @@ ALSO TCP/IP DEFINITIONS
 
 : AutoLightOff   ( - )
      Lightchange  s" :Off." Lightchange$ +place
-     i_lights_automatic bInputoff   ['] LightsOff execute-task drop ;
+     ['] LightsOff execute-task drop ;
+
+: 200Down        ( - )  i_lights_sunset bInputOff  AutoLightOff    ( 3 to lights-#changes ) ;
 
 FORTH DEFINITIONS PREVIOUS PREVIOUS
 \ \s
