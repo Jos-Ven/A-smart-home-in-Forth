@@ -34,7 +34,7 @@ ALSO HTML
   s" /> " pagelink>  +HTML| </svg> | ;
 
 : NoteInputBox  ( - )
-    +HTML| <td <td colspan="2" width="100%" align="center"> |
+    +HTML| <td colspan="2" width="100%" align="center"> |
     <form>
             +HTML| <textarea maxlength="254" name="textarea" style="width:275px;height:90px;">|
                     s" note.txt" +hfile +HTML| </textarea>|
@@ -173,7 +173,7 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
     s" Rpi Administration"  <<td-legend>>
     s" administrator-work-svgrepo-com.svg" +hfile s" /Admin"       FindOwnId  svg-link
     <</td-legend>> ;
-
+                                                                                  0
 : .Editnote ( - )
     s" Edit note"  <<td-legend>>
     s" document-svgrepo-com.svg"   +hfile  s" /ModifyNote"         FindOwnId  svg-link
@@ -181,7 +181,7 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
 
 : .SavedNote ( - )
     SavedNote
-        if    2 <#tdC>  s" note.txt" +hfile   <br> NearWhite 300 4 <hrWH>
+        if    2 <#tdC>  s" note.txt" +hfile   <br>
               </td>
         else  NoteInputBox
         then ;
@@ -195,15 +195,15 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
 [THEN]
 
 : Links-to-pages ( - ) \ Most visited pages. Should be adapted for your site.
-        +HTML| <table  style="   border-spacing: 15px 0; border-collapse: separate;"|
+        +HTML| <table  style=" border-spacing: 15px 0; border-collapse: separate;"|
         +HTML| border="0" cellpadding="0" height="100%" width="100%" >|
         Links-first-row
-        <tr> <td> .HtmlSpace <td> </tr> \ seperator
-        <tr> Links-second-row  </tr> ;
+        <tr>  4 <#tdL> .HtmlSpace <td> </tr> \ seperator
+        Links-second-row   ;
 
 : .SitesIndex ( - )
     s" Main index " NearWhite 0 <HtmlLayout>    \ Starts a table in a htmlpage with a legend
-    <td> Links-to-pages </td>
+      Links-to-pages
     <tr> 4 <#tdL>
             +HTML| Favorites: |
             s" https://www.novabbs.com/devel/thread.php?group=comp.lang.forth" s" Clf" <<TopLink>> .HtmlSpace
@@ -213,7 +213,7 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
             s" https://www.taygeta.com/fsl/sciforth.html"   s" SciForth"          <<TopLink>>
          <br> +Arplink s" /UpdateLinksIndex"  Sitelinks
          </td>
-     +HTML| <td align="right" valign="bottom">|  .GforthDriven  </td> </tr>  </table>
+     +HTML| <td align="right" valign="bottom">|  .GforthDriven  </td> </tr> </table>
     <EndHtmlLayout> ;
 
 : SaveNote ( adr n -  )

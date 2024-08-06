@@ -29,7 +29,7 @@ ip_table$ count file-status nip 0<>
 \ \\\\\ The parameters to create an ip table for 20 servers are:
 
 55  constant Max#servers         \ When a range starts at x00.
-40  Max#servers min to #servers  \ MAXIMAL number of Raspberry servers and other servers
+50  Max#servers min to #servers  \ MAXIMAL number of Raspberry servers and other servers
 
 
 : FindIpStartRange ( - IpStartRange )

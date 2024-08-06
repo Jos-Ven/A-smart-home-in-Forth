@@ -36,7 +36,8 @@ needs ldr.fs
            bInput: i_window_#Changes     \ 3
            bInput: i_window_OpeningHours \ 4
            bInput: i_window_Month        \ 5
-           bInput: i_window_Automatic    \ 6 \ Choose between automatic or manual (Gui)
+           bInput: i_window_Online       \ 6
+           bInput: i_window_Automatic    \ 7 \ Choose between automatic or manual (Gui)
                      >#bInputs c! \ 7
 
 2variable gui-window-mp
@@ -112,6 +113,7 @@ init-net  i_window_Automatic bInputOn  \ .eval-wnd-net
 : eval-wnd-net  ( - result-output )  \ Updates the relations. Result: Open window when true
    set-window-override                      \ New input for i_window_Override          \ 1
    inq_ldr inq_pressure inq_Temperature inq_OpeningHours inq_Month inq_#changes
+   esp-window-server r>Online @ i_window_Online bInput!
    [ autom-window-mp all-bits ] literal autom-window-mp match-mp     i_window_autom  bInput!  \ 2
    [ gui-window-mp   all-bits ] literal gui-window-mp   match-mp     i_window_gui    bInput!  \ 3
    out-window-mp any-mp ;                                                       \ 4
@@ -219,6 +221,11 @@ ALSO HTML
       <tdR> #changes_high .html </td>
   </tr>
 
+  <tr> <tdL> +HTML| Online | </td>
+       <td>  i_window_Online bInput@ .html </td>
+       3 <#tdC> .HtmlBl </td>
+  </tr>
+
   <tr> <tdL> +HTML| Automatic | </td>
        <td>  i_window_Automatic bInput@ .html </td>
        3 <#tdC> NearWhite 230 4 <hrWH> </td>
@@ -269,10 +276,12 @@ ALSO TCP/IP DEFINITIONS
 
 : q bye ;
 : /windowcontrol ( - ) ['] Window set-page  ;
-: AutoWindow     ( - ) i_window_Automatic invert-bit-input  ;
-: WindowOpen     ( - ) i_window_Automatic bInputoff send-open-window ;
+: AutoWindow     ( - ) i_window_Automatic invert-bit-input open/close-window ;
+: WindowStop     ( - ) i_window_Automatic bInputoff eval-wnd-net drop send-stop-window ;
 : WindowClose    ( - ) i_window_Automatic bInputoff send-close-window ;
-: WindowStop     ( - ) send-stop-window ;
+: WindowOpen     ( - )
+    i_window_Automatic bInputoff  i_window_Light bInputOn  0 to #changes
+    send-open-window ;
 
 FORTH DEFINITIONS PREVIOUS PREVIOUS
 

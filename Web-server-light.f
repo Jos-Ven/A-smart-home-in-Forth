@@ -30,6 +30,9 @@ Last tested under:
               You can now also add your own sensors and see their historical data.
             - Added multiport gates to monitor and handle complicated decisions.
             - Changed LowLightLevel to ControlLights.
+
+28-07-2024  - Increased the linger time to 10 seconds.
+            - Minor changes in the site index.
 [then]
 
 needs Common-extensions.f
@@ -520,7 +523,7 @@ variable init-webserver-gforth-chain
        SplitVersion (.) +upad  s" ." +upad  (.) +upad
     init-webserver-gforth-chain chainperform ;
 
-: linger-tcp ( fileno - )   SO_LINGER 1 sp@ 2 cells SetSolOpt ;
+: linger-tcp ( fileno - )   SO_LINGER 10 sp@ 2 cells SetSolOpt ;
 : NoTcpDelay ( tcp-sock - ) TCP_NODELAY 1 dup cell SetSolOpt ;
 
 

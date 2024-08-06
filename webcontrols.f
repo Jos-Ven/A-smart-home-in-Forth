@@ -518,7 +518,7 @@ $e7e7e7 constant ButtonWhite
     +HTML| left: 2%; } |
     +HTML| fieldset { border:2px solid green;} | ;
 
-: CssStyles ( - )
+: CssStyles ( - )    
    +HTML| <style> | svg_style-header
     s" a:link, a:visited {  cursor: pointer; } " +HTML
    95 14 +cssButton{}   \ Round buttons
