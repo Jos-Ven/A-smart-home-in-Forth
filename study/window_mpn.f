@@ -1,18 +1,6 @@
 marker window_mpn.f  \ Simulation to control a window.
 
 needs multiport_gate.f
-0 [if]
-
-22-12-2023, 15:43:48	     Limits during opening hours
-Item	       inputs	Actual	Open	Close	JobMin	JobMax
-Light (lux)	o	101.90	1.00	0.06	0.00	246.33
-Pressure (hPA)	c	1003.88	1010.00	1007.00	1003.39	1004.02
-Temperature (C)	c	19.92	23.00	21.00	16.85	17.62
-#Changes	o	0	0	4
-Opening hours	c	15:43  06:00:00 11:00:00
-Month	        c	12	0409
-
-[then]
 
 2variable autom-mp
 0 autom-mp bInput: i_Light        \ 0
@@ -34,7 +22,7 @@ Month	        c	12	0409
          bInput: i_gui        \ 1
                  >#bInputs c! \ 2
 
-: init-net      ( - )  0 autom-mp !   0 gui-mp !   0 out-mp ! ;
+: init-net      ( - )  0 autom-mp l!   0 gui-mp l!   0 out-mp l! ;
 
 : set-override  ( - ) i_Automatic  i_Override   invert-dest-input ;
 
@@ -44,14 +32,22 @@ Month	        c	12	0409
    [ gui-mp   all-bits ] literal gui-mp   match-mp     i_gui    bInput!
    out-mp any-mp ;
 
+
+: .char##     (  n seperator -- )
+    swap s>d <# # #  2 pick hold  #> rot 0= abs /string type ;
+
+: .time&date ( - )
+   time&date bl .char##  [char] - .char## [char] - .char##
+             bl .char##  [char] : .char## [char] : .char## ;
+
 : .eval-wnd-net ( - )  \ To Track the inputs and outputs.
    eval-wnd-net drop   \ eval-wnd-net is needed to update the relations!
-   cr .line-- space .time
+   cr .line--  .time&date
    cr ." Autom " [ autom-mp all-bits ] literal autom-mp .match-mp
    cr ." Gui "   [ gui-mp   all-bits ] literal gui-mp   .match-mp
    cr ." Out "   out-mp .any-mp ;
 
-init-net  .eval-wnd-net
+   init-net .eval-wnd-net
 
 0 [if]
     i_Light         bInputOn

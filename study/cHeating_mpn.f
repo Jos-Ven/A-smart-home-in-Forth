@@ -23,7 +23,7 @@ needs multiport_gate.f
    3 autom-mp >threshold c!
    2 gui-mp   >threshold c!
    1 out-mp   >threshold c!
-   0 autom-mp !   0 gui-mp !   0 out-mp ! ;
+   0 autom-mp l!   0 gui-mp l!   0 out-mp l! ;
 
 i_Automatic  bInputOn \ Choose between automatic or manual (Gui)
 
