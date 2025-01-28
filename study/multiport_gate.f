@@ -1,4 +1,4 @@
-marker multiport_gate.f  \ 25-1-2025 by J.v.d.Ven
+marker multiport_gate.f  \ 28-1-2025 by J.v.d.Ven
 
 0 [if]
 A multiport gate can be used make a decision depending on multiple conditions.
@@ -19,9 +19,11 @@ Advantages:
 - One multiport gate compares only ONE value and the content of ONE lfield to make a
   decision, instead of having to check a number of separate variables or bytes.
 
-25-1-2025
+28-1-2025
 - Now it uses l@ and l! for a 64 bits Forth like Gforth.
 - Removed the dependicies on Common-extensions.f outside cforth
+- Better structure of /multiport
+
 [then]
 
 
@@ -34,8 +36,7 @@ s" cforth" ENVIRONMENT? [if] drop
    \ 1) Clone: https://github.com/Jos-Ven/cforth
    \ 2) Build: ~/cforth/build/esp32-extra
    needs lfield: Common-extensions.f \ Should be in flash memory by now.
-   ' ! alias l!
-   ' @ alias l@
+   alias !l !
    [else]   [undefined]  l! also environment max-n previous 2147483647 = and [if]
                  synonym l! !    synonym l@ @     \ For 32 bits Forth systems (200x)
             [ELSE]     [undefined]  l! [if]       \ For 64 bits Forth systems
@@ -54,10 +55,10 @@ s" win32forth" ENVIRONMENT? [if] drop
 
 begin-structure /multiport
   lfield: inputs
-  cfield: >threshold \ For sum-mp
-  cfield: >#bInputs  \ The number of used bits
-  cfield: >last-out  \ Optional to be set by an application
-  cfield: >reserved1
+  bfield: >threshold \ For sum-mp
+  bfield: >#bInputs  \ The number of used bits
+  bfield: >last-out  \ Optional to be set by an application
+  bfield: >reserved1
 end-structure
 
 0 constant 1st-bInput
@@ -161,7 +162,7 @@ s" win32forth" ENVIRONMENT? [IF] DROP
 
 \ ------ Use:
 
-0 [if] \ Change the 0 into 1 for the following test case
+1 [if] \ Change the 0 into 1 for the following test case
 
 create eg-multiport 8 allot          \    Step 1: Create a 64 bits variable for a multiport gate
 
