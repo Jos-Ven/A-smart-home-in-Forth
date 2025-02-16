@@ -1,4 +1,4 @@
-marker mcp3008.fs
+marker mcp3008.fs  .latest
 
 CheckI2c 0=  [IF] cr cr .( ERROR. The needed I2c interface is NOT activated!  ok ) abort cr [then]
 

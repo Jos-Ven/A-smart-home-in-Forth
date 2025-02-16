@@ -1,5 +1,6 @@
 needs slave.fs             \ Will load all that is needed for the Web server light
 cr Marker _down.fs .latest \  1 page only.
+needs schedule_daily.fs
 
 \ ---- The HTML-page for the application --------------------------------------------------------
 
@@ -58,7 +59,7 @@ forth definitions
 cr order
 
 \ ' (handle-request) is handle-request  \ Default
-\ ' see-request is handle-request       \ To see the complete received request
+ ' see-request is handle-request       \ To see the complete received request
 
 cr  .( Starting the webserver. )
 start-servers

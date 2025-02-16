@@ -1,6 +1,6 @@
 needs Common-extensions.f
 needs webcontrols.f
-marker LoadAvg.fs
+marker LoadAvg.fs   .latest
 
 : GetLoadAvg ( - LoadAvgLine$ count )
     s" /proc/loadavg" r/o open-file throw >r

@@ -357,7 +357,8 @@ coded char - negate + dup 1 3  >floorItem ! 1 4  >floorItem !
 
 : ((+.Outside)) ( - )
     0 1 >floorItem @ 10 / dup
-    +HTML| Outside:| 10 / TemperatureClassification +html .HtmlSpace (n.1) +html ;
+    +HTML| Outside:| 10 / TemperatureClassification +html .HtmlSpace
+     (n.1) +html  .HtmlSpace +HTML| c| ;
 
 ' ((+.Outside)) is (+.Outside)
 

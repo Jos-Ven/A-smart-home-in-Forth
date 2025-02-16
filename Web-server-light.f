@@ -1,8 +1,8 @@
-\ 15-11-2023 A web server by J.v.d.Ven.
+\ 16-02-2025 A web server by J.v.d.Ven.
 
-0 [if]
+0 [IF]
 
-For small applications.
+For small web-applications.
 Runs in windows under Win32Forth 6.15.04 or in Linux 8 or better under Gforth.
 Last tested under:
 - The Bullseye (Kernel: Linux 5.15.32+) on a raspberry zero
@@ -33,11 +33,17 @@ Last tested under:
 
 28-07-2024  - Increased the linger time to 10 seconds.
             - Minor changes in the site index.
-[then]
+
+16-02-2025  - Added Sleep for the Central heating and LightsControl.
+            - Changed shget to prevent a memory overflow.
+            - Added worker-threads and removed a number of execute-task for better multitasking.
+            - Replaced +f by +a to get access to the forth tcp/ip and html dictionaries.
+            - Added SendTcpInBackground to prevent time outs in the main task when a TCP message is send.
+            - Added \\ to receive messages like stack information from other systems on the network
+[THEN]
 
 needs Common-extensions.f
 needs Server-controller.f
-
 
 marker Web-server-light.f .latest
 
@@ -128,8 +134,10 @@ create allowed-ip$ ," ." \ A dot to allow any IPv4 connection. Could be " 192.16
    then +upad upad"  +log ;
 
 : send-html-page ( packet cnt sock - )
-     -rot make-packet rot send-packet drop ;
-
+    -rot dup 0>
+       if    make-packet rot send-packet drop
+       else  3drop
+       then ;
 
 S" win32forth" ENVIRONMENT? [IF] DROP
 
@@ -193,7 +201,7 @@ needs itools.frt
    s" - - - - - - - " upad place (ud,.) +upad s"  Ms " +upad
    &last-line-packet$ count +upad upad"  write-log-line ;
 
-synonym  handle-requests noop
+synonym handle-requests noop
 synonym Add/Tmp/Dir noop
 
 : html-responder ( packet-in$ cnt - )
@@ -214,8 +222,7 @@ synonym Add/Tmp/Dir noop
                  then
          else   s" 0 packet detected." +log drop
          then
-   elapsed LogElapsed$
- ;
+   elapsed LogElapsed$ ;
 
 
 Needs security.f \ For 'Down' to shutdown the PC
@@ -313,6 +320,7 @@ cell newuser depth-target
   #255 min  evaluate xt-htmlpage @ dup 0<>
     if    catch dup 0<>
             if    xt-htmlpage @ name>string rot .catch-error
+            \in-system-ok order only forth tcp/ip seal
             else drop
             then
     else  drop
@@ -395,12 +403,11 @@ Create homelink$ 0 c, 255 chars allot
 
 S" gforth" ENVIRONMENT? [IF] 2drop
 
+
 cr
 .( Linux: )  OsVersion" type cr
 .( Dir: )    upad 255 get-dir type cr
 
-
-needs chains.fs
 
 c-library socketExt
     \c #include <netdb.h>
@@ -460,11 +467,10 @@ cell newuser pMsStart
       then ;
 
 : open#Webserver   ( #server|host-id - sock|ior )
-   dup  dup 100 <
-    if    r>port @ swap ipAdress$
-    else  drop 80 swap host-id>ip$  \ for esp-systems
+   dup 100 <
+    if    dup r>port @ swap ipAdress$
+    else  100 /mod drop dup r>port @ swap ipAdress$
     then
-
    2dup +log
    rot SOCK_STREAM IPPROTO_TCP open-port-socket ;
 
@@ -515,7 +521,6 @@ cell newuser pMsStart
          unmap-file
    then  &Version ! ;
 
-
 variable init-webserver-gforth-chain
 
 : initWebServer   ( - )
@@ -526,30 +531,55 @@ variable init-webserver-gforth-chain
 : linger-tcp ( fileno - )   SO_LINGER 10 sp@ 2 cells SetSolOpt ;
 : NoTcpDelay ( tcp-sock - ) TCP_NODELAY 1 dup cell SetSolOpt ;
 
+maxcounted cell+ newuser SendTcp$
 
-: (SendTcp) ( msg$ cnt #server -- res|#send )    \ 0: connection failed
-    >r s" TCP/IP: ---> " upad place   2dup +upad s"  @" +upad r@ (.) +upad  upad"  +log
+: (SendTcp) ( msg$ cnt #server -- res|#send )    \ Changes char at msg$.
+    >r s" TCP/IP: ---> " upad place    2dup +upad
+    s"  @" +upad r@ (.) +upad  upad"  +log
+    over swap SendTcp$ place
+    0 swap 1- c!                                 \ data saved
     r@ open#Webserver dup 0=
-       if    3drop r@ host-id>#server r>Online off
+       if    drop r@ host-id>#server r>Online off
              r>  (.) upad place s"  can not be reached." +upad" +log false
        else  dup>r fileno  dup reuseaddr dup NoTcpDelay linger-tcp
              SOCK_CLOEXEC r@ SetMode
-             r@ send-packet r>  close-socket r> drop
-       then  ;
+             SendTcp$ count r@ send-packet r>  close-socket r> drop
+       then ;                                    \ 0: connection failed
 
 
-: SendTcp ( msg$ cnt #server -- res|#send )     \ 0: connection failed
+: SendTcp ( msg$ cnt #server -- res|#send )      \ 0: connection failed
     CheckGateway
       if    (SendTcp)
       else  3drop log" No gateway." 0
       then ;
 
-: SendTcpInBackground ( msg$ cnt #server --  )     \ result in: >Online
-    3 stacksize4 NewTask4 pass dup>r SendTcp r> r>Online ! ;
+: SendTcptask  ( counted-msg$  #server --  )     \ Result in: >Online
+    dup 99 >
+       if    100 /mod drop
+       then
+    dup #servers >=
+     if   s" Error for: " upad place over count +upad" +log
+          s" Error:  ServerID "  upad place    (.) +upad
+          s"  outside the range of #servers. "  +upad" +log
+          0 swap c!
+     else >r count r@ SendTcp r> r>Online !
+     then ;
+
+: WaitOnAcepted ( &data - flag )
+   0 swap 1000 0
+      do dup c@ 0=    \ max 5 sec
+              if    nip true swap leave
+              then  5 ms
+         loop
+    drop ;
+
+: SendTcpInBackground ( msg$ count  #server --  )
+    >r  SendTcp$ place  SendTcp$ r> ['] SendTcptask spawn2
+   SendTcp$ WaitOnAcepted drop ;
 
 : Ask-StandBy ( - )
    FindOwnId 1 =
-     if s" GET Ask-StandBy" 0 (SendTcp) drop
+     if s" Ask-StandBy" 0 (SendTcp) drop
      then ;
 
 : LockConsole ( - )
@@ -610,7 +640,7 @@ variable init-webserver-gforth-chain
 
 : handle-web-packet ( aSock - )
    dup fd>file  aSock !
-   dup linger-tcp
+\   dup linger-tcp
        recv_tcp
    2dup Confirmations?
       if     2drop  log" confirmation packet."
@@ -628,25 +658,29 @@ variable init-webserver-gforth-chain
 
 #-2130706456 constant wsPing-      \ The value is reserved for UdpSender.f
 
-: Send1WsPing ( #server - )
-\   s" Send1WsPing @" here place dup (.) here +place  here count +log
+: Send1WsPing ( &-#server - )
+   dup @  0 rot c!  1- negate
    wsPing- (.) utmp$ place  space" +utmp$
    s"  wsping " +utmp$
    OwnIP$ count +utmp$
-   utmp" rot (SendUdp) 25 ms ;
+   utmp" rot (SendUdp) ;
 
 : TcpPort? ( #server - flag ) r>port @ dup 8080 = swap 80 = or ;
 
-: PingTcpServers ( - )             \ See also -ArpToGforthServers
+: Send1WsPingTask ( #server - )
+   1+ negate SendTcp$ !  SendTcp$ ['] Send1WsPing spawn1 ;
+
+: PingTcpServers ( - )                 \ See also -ArpToGforthServers
   CheckGateway
     if  log"  " #servers  0
-         ?do  i TcpPort?               \ Filter ports 80 and 8080
+         ?do  i TcpPort?                \ Filter ports 80 and 8080
                if  i ServerHost <>      \ Exclude myself
-                   if   i Send1WsPing
+                   if   i Send1WsPingTask
+                        SendTcp$ WaitOnAcepted drop
                    then
                then
          loop
-     then ;
+     then 30 ms ;
 
 : ClearTcpServers ( - )
    #servers  0
@@ -656,6 +690,7 @@ variable init-webserver-gforth-chain
                then
           then
      loop  ;
+
 
 : SetTcpServerOnline ( buffer len - )
     over >r bl scan  drop  r@ - r> swap
@@ -717,7 +752,7 @@ allocate-buffers
 
 : LogIpWebserver ( adr cnt - )  +log ;
 
-: http-server ( port - )    \ Started by execute-task
+: http-server ( port - )    \ Started in a task
    create-server dup to web-server-sock
     \ .s quit
    dup NoTcpDelay
@@ -727,7 +762,7 @@ allocate-buffers
    log" Starting the connection loop"
    &last-line-packet$ count   write-log-line
    begin  wait-for-connection web-server-sock
-      while  homelink$ c@ 1 = \ aSock iaddr
+      while  htmlpage$ off homelink$ c@ 1 = \ aSock iaddr
                   if  SetHomeLink
                   then
                dup 0<>
@@ -735,13 +770,14 @@ allocate-buffers
                         if    dup handle-web-packet   \ aSock
                         else  log" IP-adress not allowed!"
                         then  [DEFINED]  fd>file
-                                  [if]    ShutdownTCPConnection
+                                  [IF]    ShutdownTCPConnection
                                   [ELSE]  close-socket
                                   [THEN]
                   else 2drop
                   then
-      5 ms  htmlpage$ off
-      repeat 2drop  bye ;
+      5 ms  aSock off
+      repeat 2drop key drop ;
+
 
 : Starting-http-server ( -- )  ServerHost r>port @ http-server ;
 
@@ -754,14 +790,12 @@ false value tid-http-server
            1000 ms log" Web server at: " SetHomeLink homelink$ count 2dup +log
            ServerHost r>HostName count upad place space" +upad (time) +upad
            s" : Webserver started at: " +upad  +upad s" /home" +upad" Wall
-     [ [DEFINED] DisableLogging ] [IF] Log" Disable logging" 0 to hlogfile [THEN]
-     [ [DEFINED] execute-task ] [IF]   ['] noop is dobacktrace  \ Gforth
-                                       ['] Starting-http-server execute-task to tid-http-server \ Background
-                                [ELSE] Starting-http-server     \ Win32Forth
-                                [THEN]
- \   Starting-http-server  \ Foreground Gforth
-   ;
-
+     [ [DEFINED] DisableLogging ]        [IF] Log" Disable logging" 0 to hlogfile [THEN]
+     [ s" gforth" environment? ]         [IF] [ 2drop ] ['] noop is dobacktrace
+       stacksize4 newtask4 dup to tid-http-server activate Starting-http-server  \ Background Gforth
+                                      \   Starting-http-server        \ Foreground Gforth
+                                         [ELSE] Starting-http-server  \ Win32Forth
+                                         [THEN] ;
 
 : <yellow-page  ( - )
     StartHeader
@@ -782,9 +816,10 @@ false value tid-http-server
     +html| <br> <br> *** Bye, Forth *** <br>| IncludeSitelinks yellow-page> ;
 
 0 value #send
-3 constant #max-attempts           256 newuser UdpOut$
+3 constant #max-attempts
+maxcounted cell+ newuser UdpOut$
 
-: UdpOut"    ( - upad count )          UdpOut$ count  ;
+: UdpOut"    ( - upad count )         UdpOut$ count  ;
 : +UdpOut    ( adr cnt -- )           UdpOut$ +place ;
 : .UdpOut    ( n -- )                 (.) +UdpOut ;
 
@@ -795,14 +830,12 @@ false value tid-http-server
      else  rot drop              \ No HTTP/ found, keep all
      then ;
 
-S" win32forth" ENVIRONMENT? [IF]
-DROP
+S" win32forth" ENVIRONMENT? [IF] DROP
 
 : open-upd-port ( #server port - sock|0 )  1 abort" open-upd-port not defined"  ;
 : SendUdp       { msg$ cnt #server -- }    1 abort" SendUdp undefined"   ;
 
  wTasks webserver-tasks  Start: webserver-tasks
-
 
 : start-servers ( - )
   \in-system-ok also tcp/ip
@@ -956,8 +989,6 @@ TCP/IP DEFINITIONS
    log" Bye, Forth." bye-page  send-last-packet 25 ms
    ((bye)) ;
 
-: ` ( - )  0 to web-server-sock bye ;
-
 
 FORTH DEFINITIONS
 
@@ -987,8 +1018,11 @@ defer udp-requests  ( adr len --)
  ' evaluating_tcp/ip is udp-requests
 
 0 value Udp-server-sock
+0 value Tid-Udp-server
+
 
 : Udp-server ( - )
+   stacksize4 newtask4 dup to Tid-Udp-server activate
    UdpPORT  create-udp-server dup to Udp-server-sock
      begin  web-server-sock
      while  Udp-server-sock   udpin$ dup off
@@ -1008,7 +1042,6 @@ defer udp-requests  ( adr len --)
   cr ." Udp-server Ended"
   Udp-server-sock close-socket bye ;
 
-0 value Tid-Udp-server
 
 : fsearch   ( c-addr1 u1 c-addr2 u2 c-filename3 u3 -- u4 flag )
    2dup file-status 0= \  u4 = characters remaining in the file
@@ -1026,10 +1059,13 @@ defer udp-requests  ( adr len --)
 : Add/Tmp/Dir ( &filename cnt - &/tmp/filename cnt )
    TmpDir upad place +upad" ;
 
+cores 14 max to cores
+cr .( Starting ) cores . .( thread workers.) start-workers cr
+
 : start-servers ( - )
    tcp/ip seal
      [DEFINED] DisableUpdServer [IF]
-     [ELSE]    ['] Udp-server execute-task to Tid-Udp-server \ Start the udp server
+      [ELSE]    Udp-server
      [THEN]
    s" yes" s" background.log"  Add/Tmp/Dir  fsearch nip      \ See also gf.sh for background operations
       if   s" background.log"  Add/Tmp/Dir r/w  open-file throw

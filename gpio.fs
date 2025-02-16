@@ -1,4 +1,4 @@
-Marker gpio.fs   \ To control and administer GPio pins
+Marker gpio.fs  .latest  \ To control and administer GPio pins
 
 needs Common-extensions.f
 needs wiringPi.fs

@@ -1,6 +1,7 @@
-marker slave.fs  \ To update the configuered Gforth systems in a network.
-
 needs Common-extensions.f
+
+marker slave.fs  .latest \ To update the configuered Gforth systems in a network.
+
 needs Sun.f
 Needs Web-server-light.f
 needs webcontrols.f
@@ -10,12 +11,15 @@ needs chains.fs
 needs autogen_ip_table.fs  \ Set parameters first at the start of autogen_ip_table.fs
 
 
-variable exit-chain
 defer KillTasks    ' noop is KillTasks
 ' KillTasks exit-chain chained
 
 0 value (standby)
 variable standby-chain
+
+variable Reset-sleep-chain
+
+: Reset-sleep ( - )   Reset-sleep-chain LogChainPerform ;
 
 
 2000 value ngettime \ Next time at 20:00
@@ -38,10 +42,8 @@ variable standby-chain
 : RestartGforth ( - )
    cr .current-time&date ."  Restarting Gforth."
    log" Running the exit-chain. "
-   exit-chain chainperform
    s" sudo ./gf.sh" system \ Must also kill gforth if still exist!
-  bye
-   ;
+   exit-chain chainperform ;
 
 : RemoveNupdate.sh ( - )
   s" nupdate.sh" file-status nip not
@@ -141,8 +143,7 @@ also tcp/ip
 
 : ClearArpTable ( - )
    log" ClearArpTable " s" sudo ip neigh flush all" system
-   /UpdateLinks
-   ['] PingTcpServers execute-task drop ;
+   /UpdateLinks   PingTcpServers ;
 
 previous
 
@@ -223,11 +224,12 @@ previous
 
 
 false value RebuildArpTable- \ see also schedule_daily.fs
+variable 200Down-chain
 
 tcp/ip definitions
 
 : Ignore-remainder ( - ) postpone \ ;
-
+: 200Down          ( - )  200Down-chain  LogChainPerform  ;
 : /gflogSlv	( - ) ['] gflogSlv   set-page ;
 : /weblogSlv	( - ) ['] weblogSlv  set-page ;
 : /updlogSlv	( - ) ['] updlogSlv set-page ;
@@ -254,7 +256,7 @@ tcp/ip definitions
               then
     then  Ignore-remainder ;
 
-: Gforth_State ( - ) \ To the AdminServer from a slave
+: Gforth_State ( - )  \ To the AdminServer from a slave
      s" Gforth::State >" utmp$  place
      hostname$  count    +utmp$
      s"  V" +utmp$  &Version @  ErrorWebApp- if   negate   then  (.) +utmp$
@@ -272,14 +274,12 @@ FORTH DEFINITIONS PREVIOUS
 : NtpActive? ( - flag )
    s" timedatectl | grep synchronized" ShGet s"  yes" search nip nip ;
 
-needs schedule_daily.fs       \ Actions at a planned time.
-
 cr .( NTP is ) NtpActive? not [if] .( NOT )  [then] .( active.)
 
 defined Master.fs not [if]
 
 : TimeCheck ( - )
-   stacksize4 NewTask4 activate NtpActive?
+   NtpActive?
       if    ['] restart-ntp-service is sync-time
             log" No time synchronisation with the master."
       else  30000 ms
@@ -289,7 +289,9 @@ defined Master.fs not [if]
             cr .date space .time ."  Bye TimeCheck" Bye
       then ;
 
-' TimeCheck init-webserver-gforth-chain chained
+: StartTimeCheck ( - ) stacksize4 newtask4 activate TimeCheck ;
+
+' StartTimeCheck init-webserver-gforth-chain chained
 
 [else] ' restart-ntp-service is sync-time
 [then]

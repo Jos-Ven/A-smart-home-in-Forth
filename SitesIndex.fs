@@ -73,12 +73,11 @@ create ShowActivity$ 12 allot s" Pc" ShowActivity$ place
 
 : <fieldset-style> ( - )  +HTML| <fieldset style=" border: 1px #6C7780 solid;border-radius: 3px;">| ;
 
-: 0<<td-legend>>  ( legend$ cnt - ) <td> <fieldset-style> <<legend>> ;
 
 : <<td-legend>>  ( legend$ cnt - ) <td> <fieldset-style>
-       HTML| <font size="2">| pad place
-s" <strong>"  pad +place
- pad +place  s" </strong>"  pad +place s" </font>" pad +place pad count  <<legend>>  ;
+   HTML| <font size="2">| upad place
+   s" <strong>"  upad +place
+   upad +place  s" </strong>"  upad +place s" </font>" upad +place upad count  <<legend>>  ;
 
 : <</td-legend>> ( - )             </fieldset>  </td> ;
 
@@ -91,9 +90,9 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
 [ELSE]
 
 : .SoundSystem ( - )
-\       File-SVG-pictogram                    Points to page    ServerId link
+\       File-SVG-pictogram                    Points to page    ServerId   link
         s" Home theater" <<td-legend>>
-           s" sound-system-svgrepo-com.svg" +hfile  s" /home"          0 svg-link
+           s" sound-system-svgrepo-com.svg" +hfile  s" /home"      0       svg-link
           <br>  ShowActivity$ count +HTML <br>  (PM25) 0>
                 if    +pm25
                 else  .HtmlSpace
@@ -102,14 +101,18 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
 
 : .History ( - )
     s" History" <<td-legend>>
-           s" thermometer-svgrepo-com.svg"  +hfile  s" /home"          FindOwnId svg-link
+           s" thermometer-svgrepo-com.svg"  +hfile  s" /home"   FindOwnId   svg-link
            (+.Inside)  (+.Outside)
     <</td-legend>> ;
 
 : .CentralHeating ( - )
     s" Central heating"  <<td-legend>>
-           s" thermostat-svgrepo-com.svg"   +hfile  s" /CV%20menu"     FindOwnId svg-link
-           (+.Nightmode)
+           s" thermostat-svgrepo-com.svg"   +hfile  s" /Ch%20menu" FindOwnId svg-link
+              [defined] CentralHeating
+                      [if]   (+.Nightmode)
+                      [else] <br> .HtmlSpace <br>  .HtmlSpace <br>
+                      [then]
+
     <</td-legend>> ;
 
 : .on/off-html ( flag - )
@@ -122,11 +125,14 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
     s" Lights"  <<td-legend>>
            s" light-bulb-svgrepo-com.svg"   +hfile  s" /LightsControl" FindOwnId svg-link
            [DEFINED] ControlLights [IF]
-           eval-light-net i_lights_automatic bInput@
-                if   .on/off-html +HTML| Automatic|
-                else .on/off-html +HTML| Manual|
-                then
-            [ELSE]   +HTML| Off| <br> +HTML| Manual| <br> .HtmlSpace
+           eval-light-net .on/off-html  i_sleep_lights bInput@
+               if    +HTML| Sleeping |
+               else  i_Manual_lights bInput@ 0=
+                    if     +HTML| Automatic|
+                    else   +HTML| Manual|
+                    then
+               then
+            [ELSE]   +HTML| Off| <br> +HTML| Manual|  .HtmlSpace
             [THEN]
 
     <</td-legend>> ;
@@ -144,7 +150,7 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
                  else  +HTML| Manual| <br> .HtmlSpace
                  then
                     ( +HumidityIncrease )
-           [ELSE]   +HTML| Off| <br> +HTML| Manual| <br> .HtmlSpace
+           [ELSE]   +HTML| Off| <br> +HTML| Manual|   .HtmlSpace
            [THEN]
     <</td-legend>> ;
 
@@ -159,9 +165,9 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
 \ 2) 2 lines of additional text.
     .SoundSystem
     .History
-    [defined] CentralHeating [if] .CentralHeating  [then]
-    [defined] ControlLights  [if] .ControlLights   [then]
-    [defined] ControlWindow  [if] .ControlWindow   [then] ;
+    .CentralHeating
+    .ControlLights
+    .ControlWindow   ;
 
 
 : .Linux ( - )
@@ -201,9 +207,17 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
         <tr>  4 <#tdL> .HtmlSpace <td> </tr> \ seperator
         Links-second-row   ;
 
+: <HtmlLayoutSitesIndex> ( legendtxt$ cnt bgcolor Border - )
+   htmlpage$ off <html5> <html> <head> <<NoReferrer>>
+   s" Main index"   Html-title-header CssStyles </head> 3tables ;
+
+
 : .SitesIndex ( - )
-    s" Main index " NearWhite 0 <HtmlLayout>    \ Starts a table in a htmlpage with a legend
-      Links-to-pages
+   htmlpage$ off  \ First used as a temporary buffer.
+   <aHREF" +homelink  +HTML| /Schedule">| +HTML| <strong> Schedule</strong>| </a>
+   +HTML|  Main index |  htmlpage$ lcount pad place
+   pad count NearWhite 0 <HtmlLayoutSitesIndex> \ Starts a table at htmlpage$ with a legend
+    Links-to-pages
     <tr> 4 <#tdL>
             +HTML| Favorites: |
             s" https://www.novabbs.com/devel/thread.php?group=comp.lang.forth" s" Clf" <<TopLink>> .HtmlSpace
@@ -239,6 +253,7 @@ TCP/IP DEFINITIONS
 
 : /SitesIndex  ( - )  ['] .SitesIndex set-page ;
 ' /SitesIndex         alias /UpdateLinksIndex
+
 : /ModifyNote  ( - )  SavedNote not to SavedNote /SitesIndex ;
 : textarea     ( <HtmlTxt>- )  parse-name SaveNote /SitesIndex ;
 

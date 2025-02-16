@@ -1,4 +1,4 @@
-Marker bme280-output.fs
+Marker bme280-output.fs  .latest 
 
 defer .int
 defer .float

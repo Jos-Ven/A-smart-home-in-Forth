@@ -1,4 +1,4 @@
-Marker Wifi_signal.fs
+Marker Wifi_signal.fs  .latest
 
 needs Common-extensions.f
 

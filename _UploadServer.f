@@ -213,6 +213,7 @@ TCP/IP DEFINITIONS ALSO HTML
 ' noop  alias Save
 ' noop  alias Shutdown
 ' /home alias Report
+' /home alias /
 
 : Send ( - )  PushFlash  ; \ Pushes the involved file size and targeted sector to the client
 : Load ( - )  LoadOnESP ;

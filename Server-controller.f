@@ -1,5 +1,5 @@
 needs Common-extensions.f
-marker Server-controller.f
+marker Server-controller.f  .latest
 
 : +pad-log ( - )  +upad" +log ;
 
@@ -147,7 +147,7 @@ end-c-library
       else  socket ['] fileno catch
             if    drop 0  log" fileno error."
             else  to socket   3 0
-               do  socket c-addr size MSG_NOSIGNAL MSG_DONTWAIT or ['] send catch \ Catching possible Write to broken pipe
+               do  socket c-addr size MSG_NOSIGNAL ['] send catch \ Catching possible Write to broken pipe
                      if    2drop 2drop  leave
                      else  dup size = if to size leave then
                            dup -1 =   if to size leave then

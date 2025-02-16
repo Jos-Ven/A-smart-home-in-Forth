@@ -1,5 +1,5 @@
-marker autogen_ip_table.fs \ Generates ip_table.bin initial filled with IP4 numbers, portnumbers
-                           \ and later hostnames.
+marker autogen_ip_table.fs  .latest  \ Generates ip_table.bin initial filled
+                                     \  with IP4 numbers, portnumbers and later hostnames.
 \ When a ip_table.bin exists it will be mapped for futher use.
 \ Delete ip_table.bin to get a new table.
 

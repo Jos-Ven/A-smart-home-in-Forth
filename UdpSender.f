@@ -226,7 +226,7 @@ true value ignore-hangs
 : PreventHangingReceiver ( - )
     lock_sem-prev-hangs
       begin  ignore-hangs
-                if  lock_sem-prev-hangs \ sem-prev-hangs lock
+                if  lock_sem-prev-hangs
                 then
              ms@ MsLastIn  - MsMaxInactive >
                 if  AllDone UdpTimeOut ms SentInfoPacked [char] h emit
@@ -322,7 +322,7 @@ true value ignore-hangs
      ;
 
 S" gforth" ENVIRONMENT? [IF] 2drop
-' PreventHangingReceiver execute-task to TidPreventHangingReceiver \ @@
+' PreventHangingReceiver execute-task to TidPreventHangingReceiver
 [THEN]
 
 S" win32forth" ENVIRONMENT? [IF] DROP

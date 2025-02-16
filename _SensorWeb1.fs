@@ -42,7 +42,7 @@ s" Documents/MachineSettings.fs" file-status nip 0= [if]
             [THEN]
 
 
-cr s" gpio -v"  ShGet nip           \ Is the wiringPi installed?
+cr s" gpio -v"  ShGet nip        \ Is the wiringPi installed?
 [if]  needs wiringPi.fs          \ From: https://github.com/kristopherjohnson/wiringPi_gforth
       needs gpio.fs              \ To control and administer GPio pins
 [then]
@@ -97,11 +97,13 @@ needs bme280-output.fs     \ To format the output
 
 needs graphics.fs          \ To plot historical data
 needs job_support.fs       \ For background tasks.
+needs schedule_daily.fs    \ Actions at a planned time.
 
 \ Options to see the complete received request:
 \ ' see-UDP-request  is udp-requests
 \ ' see-request is handle-request
 
 cr cr .( Starting the webserver-light.)
-cr    .( The context will be TCP/IP only !  +f will get Forth again.)
+cr    .( The context will be TCP/IP only !  +a will get Forth again.)
+
 start-servers

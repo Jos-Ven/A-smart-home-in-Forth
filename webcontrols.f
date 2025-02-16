@@ -1,4 +1,4 @@
-marker webcontrols.f          \ 24-05-2024 webcontrols.f by J.v.d.Ven
+marker webcontrols.f  .latest \ 13-02-2025 webcontrols.f by J.v.d.Ven
 Needs  Web-server-light.f     \ Contains the htmlpage$ buffer
 Needs TimeDiff.f
 
@@ -311,7 +311,6 @@ $e7e7e7 constant ButtonWhite
 \in-system-ok : Btn1/0" ( f name cnt <value$"> - ) postpone s" postpone "Btn1/0 ; immediate
 \in-system-ok : BtnHL1/0" ( f name cnt <value$"> - ) postpone s" postpone "BtnHL1/0 ; immediate
 
-
 : <Radiobutton ( name$ cnt value$ cnt - )
    +HTML| <input type="radio" name="|  2swap +html
    +HTML| " value="| +html +HTML| "| ;
@@ -518,7 +517,7 @@ $e7e7e7 constant ButtonWhite
     +HTML| left: 2%; } |
     +HTML| fieldset { border:2px solid green;} | ;
 
-: CssStyles ( - )    
+: CssStyles ( - )
    +HTML| <style> | svg_style-header
     s" a:link, a:visited {  cursor: pointer; } " +HTML
    95 14 +cssButton{}   \ Round buttons
@@ -577,7 +576,6 @@ $e7e7e7 constant ButtonWhite
 : .GforthDriven ( - )
     s" Segoe UI" <FontFace 14 $0 s" <em>Gforth&nbsp;driven&nbsp;</em>" <<FontSizeColor>> </font> ;
 
-
 : y/nPage ( text$ count action$ count - )
      htmlpage$ off  s"  " Html-title-header <HEAD> <style> 50 18 +cssButton{}
      +HTML|  fieldset { border:2px solid blue } | </style>  </HEAD>
@@ -616,6 +614,7 @@ also TCP/IP TCP/IP DEFINITIONS
 ' order alias order
 ' words alias words
 ' noop  alias Yes+
+' \ alias \\
 
 : /main.css ( - )  htmlpage$ off ['] CssStyles set-page ;
 :  /favicon.ico   ( - )  ['] favicon.ico set-page ;
@@ -626,7 +625,7 @@ also TCP/IP TCP/IP DEFINITIONS
 
 
 : \quit     ( - )  quit  ;
-\in-system-ok : +f       ( - ) also forth  ;
+\in-system-ok : +a  ( - )  only forth also tcp/ip also html ;
 
 previous previous forth definitions
 

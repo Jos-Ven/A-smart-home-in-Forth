@@ -1,6 +1,6 @@
 needs Web-server-light.f
 
-marker uptime.fs    \ To get the uptime of the system
+marker uptime.fs .latest    \ To get the uptime of the system
 
 \ : AwkUptime$ ( - adr cnt )  \ Awk Version
 \   html| awk '{printf("%d %02d:%02d\n",($1/60/60/24),($1/60/60%24),($1/60%60))}' /proc/uptime |

@@ -1,4 +1,4 @@
-marker windowcontrol.f cr .( Loading: window_control.f )
+marker windowcontrol.f cr  .latest
 
 needs multiport_gate.f
 needs ldr.fs
@@ -6,7 +6,7 @@ needs ldr.fs
 \ -------------- Settings --------------
 
 
-   7e0 fvalue ldr_low             16e0 fvalue ldr_high
+   7e0 fvalue ldr_low             12e0 fvalue ldr_high
 1007e0 fvalue pressure_low      1010e0 fvalue pressure_high
   21e0 fvalue Temperature_low     23e0 fvalue Temperature_high
 0400    value OpeningHours_low    1630  value OpeningHours_high \ in local time
@@ -274,7 +274,6 @@ ALSO HTML
 
 ALSO TCP/IP DEFINITIONS
 
-: q bye ;
 : /windowcontrol ( - ) ['] Window set-page  ;
 : AutoWindow     ( - ) i_window_Automatic invert-bit-input open/close-window ;
 : WindowStop     ( - ) i_window_Automatic bInputoff eval-wnd-net drop send-stop-window ;

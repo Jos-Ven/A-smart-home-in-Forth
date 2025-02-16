@@ -1,5 +1,8 @@
+needs Common-extensions.f
+
 Needs  Master.fs \ Will also load all the Web-server-light and autogen_ip_table.fs 16-07-2023
                  \ Change Max#servers first at the start of autogen_ip_table.fs !
+
 
 Marker _DemoMaster.fs .latest \ A demo that uses webcontrols.f
 needs  gpio.fs                \ To control and administer GPio pins

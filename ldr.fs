@@ -1,4 +1,4 @@
-Marker ldr.fs
+Marker ldr.fs   .latest
 needs mcp3008.fs
 
 0 constant ChLdr    \ Channel# on which the LDR is connected to the ADC.

@@ -1,4 +1,4 @@
-marker schedule_daily.fs \ Actions at a planned time.
+marker schedule_daily.fs  .latest \ Actions at a planned time.
 
 needs Common-extensions.f
 needs Sun.f
@@ -13,8 +13,6 @@ also html
 
 : LogToday ( - )
     s" *** " upad place (date) +upad  s"  *** " +upad" +log ;
-
-[DEFINED]  ControlWindow   [IF]  0 value #changes [THEN]
 
 : Good-morning ( - )
     log" Good morning " LogToday  &last-line-packet$ count write-log-line
@@ -31,15 +29,15 @@ also html
     date-now 2drop RestartServerDay =
     if   RestartGforth  tid-http-server kill then    ;
 
-: Rebuild-arptable ( - ) true to RebuildArpTable-  ;
-
+: Rebuild-arptable ( - )  ClearArpTable  true to RebuildArpTable-  ;
 
 here dup to &options-table \ Options used by run-schedule
 \                        Map: xt      cnt adr-string
-' Good-morning            dup , >name$ , , \ Executed when the schedule is empty
-' Reset-logging-saturday  dup , >name$ , ,
-' Rebuild-arptable        dup , >name$ , ,
-' Reset-webserver_27th    dup , >name$ , ,
+   ' Good-morning            dup , >name$ , , \ Executed when the schedule is empty
+   ' Reset-logging-saturday  dup , >name$ , ,
+   ' Rebuild-arptable        dup , >name$ , ,
+   ' Reset-webserver_27th    dup , >name$ , ,
+   ' Reset-sleep             dup , >name$ , ,
 
 here swap - /option-record / to #option-records
 create file-schedule-daily ," schedule-daily.dat"

@@ -1,4 +1,4 @@
-Marker avsampler.fs \ To collect samples from sensors and to calculate the avarage for a few samples.
+Marker avsampler.fs  .latest  \ To collect samples from sensors and to calculate the avarage for a few samples.
 
 10 value #samples     0 value >sample     0 value full
 

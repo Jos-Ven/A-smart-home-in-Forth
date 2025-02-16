@@ -1,6 +1,6 @@
-marker sitelinks.fs \ To link other Forth servers to a home page
+marker sitelinks.fs  .latest \ To link other Forth servers to a home page
 
-1 value #IndexSite \ Points to the ID of the server that contains an index of all sites.
+1 value #IndexSite           \ Points to the ID of the server that contains an index of all sites.
 
 : +quote ( counted-dest$ - ) >r [char] " sp@ 1 r> +place drop ;
 : </a>2sp       ( - )  +HTML| </a>&nbsp; | ;

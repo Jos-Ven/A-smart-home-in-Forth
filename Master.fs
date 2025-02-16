@@ -107,13 +107,17 @@ also html
               then
       loop ;
 
+: GetGforth_State ( #server - )
+    dup r>Online @
+     if    s" Gforth_State?" rot SendUdp$
+     else  drop
+     then ;
+
 : GetGforth_States ( - )
   log" *** Get network state ***"
   range-Gforth-servers 2@
-       ?do  i r>Online @
-            if  s" Gforth_State?" i SendUdp$
-            then
-       loop ;
+       ?do    i ['] GetGforth_State spawn1 2 ms
+       loop 300 ms ;
 
 0 value UpdateOption
 
@@ -196,7 +200,7 @@ Needs SetVersionPage.fs
 2500 constant TimeoutUpdate
 
 : SubmitUpdate ( - ) \ Send an update signal to all other systems
-   ['] SentUpdateSignalToAllSystems execute-task drop
+   stacksize4 newtask4 activate  SentUpdateSignalToAllSystems
    TimeoutUpdate ms  ;
 
 : AllShutDownWarning ( - htmlpage$ lcount )
@@ -279,7 +283,7 @@ Needs SetVersionPage.fs
    utmp" rot SendUdp$ ;
 
 
-: StartTimesync    ( #server - ) 1 stacksize4 NewTask4 pass SendTimesync short-timeout ;
+: StartTimesync    ( #server - ) ['] SendTimesync spawn1 short-timeout ;
 
 : DoTimesync ( pkt cnt - )
    FindSender
@@ -296,7 +300,7 @@ Needs SetVersionPage.fs
      date-now sunrise +fd>Udp-line2$
      date-now sunset  +fd>Udp-line2$
    s" TcpTime HTTP/1.1" UdpOut$ +place
-   UdpOut$ count rot  SendTcp drop ;
+   UdpOut$ count rot   SendTcpInBackground ;
 
 : SendTCPTimesyncToAll ( - )
     #servers 0
@@ -305,19 +309,20 @@ Needs SetVersionPage.fs
                    if   i SendTCPTimesync
                    then
              then
-       loop ;
+       loop 50 ms ;
 
 : CopyIpTable ( - ) s" cp ip_table.bin ip_table.fbin" system ;
 
+
 : MsgGfSlavesRebuildArpTable ( - )
-    range-Gforth-servers 2@
+    stacksize4 newtask4 activate
+    log" "  range-Gforth-servers 2@
      ?do  i TcpPort?                \ Filter ports 80 and 8080
           if  i ServerHost <>       \ Exclude myself
                if   s" GET /RebuildArpTable" i SendUdp \ SendUdp$
                then
           then
-     loop log" " ;
-
+     loop ;
 
  s" # None" s" nupdate.sh" fsearch nip not
  [if]   s" # None" 0 WriteNupdate.sh
@@ -364,13 +369,13 @@ TCP/IP DEFINITIONS \ Adding the requests to the tcp/ip dictionary
    UpdateOption 6 =
      if     AllShutDownWarning
      else   SubmitUpdate
-     then  ;
+     then ;
 
 : Synchronize                   ( -  ) \ Leave the version number unchanged
    timer-reset UpdateOption 6 =
      if    AllShutDownWarning exit
      then
-   ['] SentUpdateSignalToAllSystemsToSync execute-task drop \ Send an update signal to all systems
+   stacksize4 newtask4 activate SentUpdateSignalToAllSystemsToSync \ Send an update signal to all systems
    TimeoutUpdate ms ;
 
 : DoSentShutdownSignalToAllSystems ( - )  timer-reset 6 to UpdateOption  SubmitUpdate ;

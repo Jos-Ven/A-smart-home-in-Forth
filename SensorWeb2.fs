@@ -1,4 +1,4 @@
-Marker SensorWeb2.fs
+Marker SensorWeb2.fs   .latest
 
 \ A link to the dynamic page looks like:
 \ http://nnn.nnn.n.n:8080/dynpageW1165H684

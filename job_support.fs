@@ -160,6 +160,7 @@ HumidityDecreaseTimeSpan HumidityIncreaseTimeSpan 1 + max constant #minmalFiledR
    [DEFINED] FloordataToMsgBoard  [IF]  0e send-data-humidity sent-temp-hum-to-msgboard Send-Floor  [THEN]  ;
 
 : EachMinuteJob ( - )
+   stacksize4 newtask4 dup to  TidEachMinuteJob activate
    60000 ms
    [DEFINED] SendingState   [IF] Send-Floor 0e  send-data-humidity sent-temp-hum-to-msgboard [THEN]
      begin    web-server-sock
@@ -168,23 +169,23 @@ HumidityDecreaseTimeSpan HumidityIncreaseTimeSpan 1 + max constant #minmalFiledR
               [DEFINED] ControlLights      [IF]  SendLowLightLevel        [THEN]
               [DEFINED] SendingState       [IF]  send-humidity-increase   [THEN]
               WaitTillNextMinute
-   repeat ;
+      repeat ;
 
 
 cr .( Starting the support jobs. )  \ Receiving servers should be adapted
 
-' EachMinuteJob   execute-task to TidEachMinuteJob
+EachMinuteJob
 
 : (KillTasks ( - )
     TidEachMinuteJob       kill
-    [DEFINED] CentralHeating      [IF] TidJobNightService       kill [THEN] ;
+    [DEFINED] LogValues      [IF] TidLogValues        kill [THEN] ;
 
 ' (KillTasks is KillTasks
 
 
 TCP/IP DEFINITIONS
 
-: Gforth::Standby     ( parm from - )  s" OnStandby" +log  drop  to (standby) standby-chain chainperform  ;
+: Gforth::Standby     ( parm from - )  s" OnStandby" +log  drop  to (standby) standby-chain LogChainPerform  ;
 
 [DEFINED] SendingState [IF]
 

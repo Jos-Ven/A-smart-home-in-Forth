@@ -1,4 +1,4 @@
-marker -svg_plotter.f   \ By J.v.d.Ven 05-06-2024
+marker -svg_plotter.f   .latest \ By J.v.d.Ven 05-06-2024
  \ To plot simple charts for a web client
 
 s" cforth" ENVIRONMENT?  [IF]  DROP  DECIMAL

@@ -1,7 +1,7 @@
-marker Config.f         \ For saving data, variables and strings in a file.
+marker Config.f   .latest \ For saving data, variables and strings in a file.
 needs table_sort.f
 
-0 value /ConfigDef      \ Keeps how big the size of the config file should be.
+0 value /ConfigDef        \ Keeps how big the size of the config file should be.
 
 create ConfigFile$   maxcounted allot   s" Config.dat" ConfigFile$ place
 

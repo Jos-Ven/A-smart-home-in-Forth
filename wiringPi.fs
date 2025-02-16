@@ -22,7 +22,7 @@ $ gpio -v
 
 [THEN]
 
-marker -wiringPi
+marker -wiringPi  .latest
 
 \ Update this identifier when the API changes, so that Gforth
 \ will build a new cached library.

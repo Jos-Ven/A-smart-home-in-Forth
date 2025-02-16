@@ -1,4 +1,4 @@
-Marker bme280-logger.fs
+Marker bme280-logger.fs  .latest
 
 8 constant /location
 
@@ -150,9 +150,12 @@ false value \Overshoot  \ Change \Overshoot into true to see the time after 10 s
    [then]
    FileRecords  ;
 
-: LogValues ( - )   ['] (LogValues execute-task drop ;
+0 value TidLogValues
 
-1 cells newuser &bme280-FileRecords \ Pointer to the records in the logfile
+: LogValues ( - ) 
+     stacksize4 newtask4 dup to TidLogValues activate (LogValues ;
+
+variable &bme280-FileRecords \ Pointer to the records in the logfile
 
 : r>bme280-FileRecord      ( n - &FileRecord ) \ Pointer to 1 record in the logfile
    /bme280Record * &bme280-FileRecords @ + ;

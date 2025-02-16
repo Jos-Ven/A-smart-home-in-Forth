@@ -1,5 +1,5 @@
-Marker mq135.fs  \ Returns the air quality related to clean air.
-                 \ Adapt rClean to your local situation.
+Marker mq135.fs .latest \ Returns the air quality related to clean air.
+                        \ Adapt rClean to your local situation.
 
 needs mcp3008.fs
 

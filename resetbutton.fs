@@ -1,4 +1,4 @@
-marker resetbutton.fs
+marker resetbutton.fs  .latest
 
 \ When the reset button at GPIO 16 is pressed for more
 \ than 300 ms the power will invert and there are 2 options.
@@ -35,7 +35,7 @@ needs gpio.fs
          then
   300 ms again ;
 
-: RebootCheck ( - ) ['] OnRestartButton execute-task drop ;
+: RebootCheck ( - ) stacksize4 newtask4  activate OnRestartButton  ;
 
 RebootCheck
 \\\

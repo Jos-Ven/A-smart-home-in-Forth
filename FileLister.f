@@ -1,7 +1,8 @@
 needs webcontrols.f  bl emit .latest .(  12-07-2023 )      \ by J.v.d.Ven.
 needs table_sort.f
 
-marker FileLister.f
+marker FileLister.f  .latest
+
 
 0 value hFilenames
 : FileNameList ( - adr cnt ) s" ForthFileList.tmp" ;
