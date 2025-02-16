@@ -1,4 +1,4 @@
-Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 31-07-2023
+Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 24-12-2024
 
 : CloseFile ( fid - ) dup flush-file drop close-file drop ;
 
@@ -6,7 +6,13 @@ S" gforth" ENVIRONMENT? [IF] 2drop
 
 needs unbuffer.fs
 needs unix/pthread.fs
+
+: (bye ( -- ) bye ;
+
+needs cilk.fs
 needs unix/mmap.fs
+needs chains.fs
+
 
 : unmap-file ( vadr count  -- )     2dup MS_ASYNC msync drop unmap ;
 : \in-system-ok ( -- )              ; immediate \ Used in Win32Forth to suppress a number of messages.
@@ -43,10 +49,10 @@ synonym      cls        page
 
 [THEN]
 
-maxcounted 1+ newuser utmp$
+maxcounted cell+ newuser utmp$
 0 value hLogfile
-maxcounted 1+ newuser log-line$
-maxcounted 1+ newuser upad    \ needs to be multi user from this point
+maxcounted cell+ newuser log-line$
+maxcounted cell+ newuser upad    \ needs to be multi user from this point
 
 : utmp"   ( - addr cnt )          utmp$ count ;
 : +utmp$  ( adr cnt -  )         utmp$ +place ;
@@ -142,11 +148,12 @@ S" gforth" ENVIRONMENT? [IF] 2drop
     last-lit,   \ postpone name>string \ type
    [char] " parse postpone sliteral postpone def-logged ; immediate
 
+
 : ShGet ( addr u -- addr' u' ) \ Differs from the sh-get version in scrip.fs
     \G open command addr u, and read in the result
-    r/o open-pipe throw dup >r slurp-fid
-    r@ flush-file drop
-    r> close-pipe throw drop 2dup upad place drop free drop upad count ;
+    r/o open-pipe throw >r
+    upad maxcounted r@ read-file throw
+    r> close-pipe throw drop upad swap ;
 
 : OsVersion" ( - adr cnt ) s" cat /etc/os-release | grep VERSION=" ShGet 1- ;
 
@@ -182,6 +189,7 @@ S" gforth" ENVIRONMENT? [IF] 2drop
 
 : +cells ( n1 a1 -- n1*cell+a1 ) \ multiply n1 by the cell size and add
           swap cells+ ;          \ the result to address a1
+
 
 create crlf$  2 c, 13 c, 10 c,
 
@@ -283,9 +291,39 @@ s" /sys/class/leds/led1/brightness" file-status nip \ led1 does not exist on a R
    log" ready"
    FreeMem" +log ;
 
-[THEN]
 
-needs Config.f           \ For saving data, variables and strings in a file
+\ In case of probems
+
+: .chainperform   ( chain - )
+  cr ."  ------ " .time ."  ------ "
+  cr  ."  Chain: "  dup >body  .id
+  BEGIN   @ dup
+  WHILE   cr space dup cell+ dup @ .id perform .s  \ ( - &next_in_chain )
+  REPEAT
+  drop cr ."  ------ " cr ;
+
+
+: LogChainPerform   ( chain - )
+   s" ------ Chain: ------" +log
+   dup >body  name>string +log
+     BEGIN   @ dup
+     WHILE   dup cell+ dup @  name>string +log
+             perform  ( - &next_in_chain )
+     REPEAT
+  drop  50 ms s"  ------ End chain ------ " +log  ;
+
+
+: kill-workers ( - )  \ no sync just kill the workers
+     workers $@len cell/ 0 ?DO worker@ kill LOOP 1 ms  ;
+
+variable exit-chain
+
+: bye ( -- )  exit-chain LogChainPerform ;
+
+ ' (bye         exit-chain chained
+ ' kill-workers exit-chain chained
+
+[THEN]
 
 S" win32forth" ENVIRONMENT? [IF] DROP
 
@@ -327,7 +365,7 @@ Needs security.f
     maxcounted log-line$ count nip - min
     log-line$ +PlaceFilteredChars log-line$ count write-log-line  ;
 
-: +log        ( adr cnt - )  ['] (+log LogSlot  ;
+: +log        ( adr cnt - )  ['] (+log LogSlot ;
 : log"        ( -<string">- )    compile (s") ,"  compile +log ; immediate
 : name>string ( cfa - name cnt ) >name count ;
 : 0>=         ( n - flag )       0< 0= ;
@@ -341,6 +379,7 @@ Needs security.f
 
 synonym s>number?  (number?)
 synonym pause      winpause
+synonym .latest    noop
 
 : s>number    ( adr count - d1 )  s>number? drop ;
 : Wall        ( msg$ count - ) type ; \ Perhaps not possible here.
@@ -349,6 +388,7 @@ synonym pause      winpause
 
 [THEN]
 
+needs Config.f           \ For saving data, variables and strings in a file
 
 0x1B constant escape
 
