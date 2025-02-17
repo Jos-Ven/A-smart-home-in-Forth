@@ -6,7 +6,7 @@ The Web-server-light is used to make a smart home that runs local under gForth.
 The cloud or an IOT-hub are not needed.
 Just run gForth with a webserver and connect it to a wifi router.
 
-The aims for the web-server-light_v5.2 are:
+The aims for the web-server-light are:
 1. To be able to run a smart home by using a wireless UDP or TCP connection.
 2. Exchange data between servers.
 3. Keep all data local.
