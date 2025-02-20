@@ -625,7 +625,7 @@ also TCP/IP TCP/IP DEFINITIONS
 
 
 : \quit     ( - )  quit  ;
-\in-system-ok : +a  ( - )  only forth also tcp/ip also html ;
+\in-system-ok : +a  ( - )  only forth also html also tcp/ip ;
 
 previous previous forth definitions
 

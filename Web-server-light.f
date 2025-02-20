@@ -1,4 +1,4 @@
-\ 16-02-2025 A web server by J.v.d.Ven.
+\ 14-02-2025 A web server by J.v.d.Ven.
 
 0 [IF]
 
@@ -34,12 +34,11 @@ Last tested under:
 28-07-2024  - Increased the linger time to 10 seconds.
             - Minor changes in the site index.
 
-16-02-2025  - Added Sleep for the Central heating and LightsControl.
+14-02-2025  - Added Sleep for the Central heating and LightsControl.
             - Changed shget to prevent a memory overflow.
             - Added worker-threads and removed a number of execute-task for better multitasking.
             - Replaced +f by +a to get access to the forth tcp/ip and html dictionaries.
             - Added SendTcpInBackground to prevent time outs in the main task when a TCP message is send.
-            - Added \\ to receive messages like stack information from other systems on the network
 [THEN]
 
 needs Common-extensions.f
@@ -58,11 +57,13 @@ s" favicon.ico" file-status nip  [IF] cr .( favicon.ico is missing! ) abort [THE
 
 \ Size buffers:
 0 value /maxheader
+0 value /recv                           \ the number of received characters in req-buf
 2048    constant /req-buf               \ max packet to receive
+
 $ffff /maxheader - constant /HtmlPage   \ max packet to send excl header
 /HtmlPage  /maxheader +  constant /pkt  \ max packet to send incl header
 
-create req-buf /req-buf allot
+create req-buf /req-buf allot           \ For incomming html requests
 
 : allocate-lcounted-buffer ( size - adr )
     cell+ allocate abort" Memory allocation failed" ;
@@ -216,7 +217,7 @@ synonym Add/Tmp/Dir noop
 : handle-web-packet ( aSock - )
      dup aSock !
          wait-for-packet crlf"  write-log-line  timer-reset dup
-         if  aSock @  req-buf rot /req-buf min read-packet 0=
+         if  aSock @  req-buf rot /req-buf min read-packet dup to /recv 0=
                  if     html-responder
                  else   2drop log" read-packet failed."
                  then
@@ -631,8 +632,8 @@ maxcounted cell+ newuser SendTcp$
 
 : recv_tcp { sock -- adr length } \ A browser should send a packet within 24 MS.
    0 6 0                      \ Otherwise, the accepted socket is ignored. (No packet received)
-     do  sock req-buf cell+ /req-buf MSG_DONTWAIT recv dup 0>
-           if    nip leave
+     do  sock req-buf cell+ /req-buf MSG_DONTWAIT recv  dup 0>
+           if    nip dup to /recv leave
            else  drop
            then
         4 ms
