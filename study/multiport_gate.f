@@ -1,4 +1,4 @@
-marker multiport_gate.f  \ 28-1-2025 by J.v.d.Ven
+marker multiport_gate.f  \ 21-02-2025 by J.v.d.Ven
 
 0 [if]
 A multiport gate can be used make a decision depending on multiple conditions.
@@ -44,6 +44,11 @@ s" cforth" ENVIRONMENT? [if] drop
                        [then]
             [then]
    [then]
+
+
+s" gforth" ENVIRONMENT? [IF] 2drop
+: bfield: ( n1 <"name"> -- n2 ) ( addr -- 'addr )  #1 +field ;
+[then]
 
 
 s" win32forth" ENVIRONMENT? [if] drop

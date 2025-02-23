@@ -1,4 +1,4 @@
-\ 14-02-2025 A web server by J.v.d.Ven.
+\ 23-02-2025 A web server by J.v.d.Ven.
 
 0 [IF]
 
@@ -240,6 +240,10 @@ Needs security.f \ For 'Down' to shutdown the PC
    s" In: --->" +upad +upad  upad"  +log ;
 
 
+: open#Webserver   ( #server - sock|ior )
+   dup ipAdress$ 2dup +log
+   rot r>port @  SOCK_STREAM IPPROTO_TCP open-port-socket ;
+
 [THEN]
 
 
@@ -475,9 +479,6 @@ cell newuser pMsStart
    2dup +log
    rot SOCK_STREAM IPPROTO_TCP open-port-socket ;
 
-\ A client for an other LOCAL tcp server:
-
-: open-#Webserver  ( #server - )  dup  open#Webserver  swap r>sock ! ;
 
 : (SendUdp)         ( msg$ cnt #server -- )
         over /pad >
@@ -724,6 +725,8 @@ needs sitelinks.fs         \ To link other Forth servers to a home page
 
 allocate-buffers
 
+: open-#Webserver  ( #server - )  dup  open#Webserver  swap r>sock ! ;
+
 : CloseWebserver  ( - )
    web-server-sock 0<>
       if    web-server-sock  closesocket drop 0 to web-server-sock
@@ -854,7 +857,7 @@ TCP/IP DEFINITIONS
    log" Exit server."
     <yellow-page SitesIndex
     +html| <br> <br> *** Exit server *** <br>| IncludeSitelinks yellow-page>
-\in-system-ok     send-last-packet  cr ." Enter +f to include Forth. Order: " order quit  ;
+\in-system-ok     send-last-packet  cr ." Enter +a to include Forth. Order: " order quit  ;
 
 : DoBye       ( -- )
    log" Bye, Forth." bye-page  send-last-packet
@@ -984,7 +987,7 @@ TCP/IP DEFINITIONS
    log" Exit server."
     <yellow-page SitesIndex
     +html| <br> <br> *** Exit server *** <br>| IncludeSitelinks yellow-page>
-     send-last-packet  cr ." Enter +f to include Forth. Order: " order cold  ;
+     send-last-packet  cr ." Enter +a to include Forth. Order: " order cold  ;
 
 : DoBye       ( -- )
    log" Bye, Forth." bye-page  send-last-packet 25 ms

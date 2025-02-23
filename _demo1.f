@@ -23,6 +23,7 @@ Servers[                 \ Starting adres for allotting servers.
 
 S" gforth" ENVIRONMENT? [IF] 2drop
  #servers SWAP range-Gforth-servers 2!   \ Store the range this type of servers
+ needs slave.fs
  [ELSE] drop
  [THEN]
 
@@ -82,7 +83,7 @@ S" win32forth" ENVIRONMENT? [IF] DROP
 \ That can be prevented by running it in a separate thread.
 cls
 
-.( Web server at: ) SetHomeLink homelink$ count type cr
+.( Web server at: ) SetHomeLink homelink$ count type .( /home ) cr
 start-servers \quit \ Start the webserver in a task in the background and stop compiling.
 
 
