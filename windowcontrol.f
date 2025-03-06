@@ -129,19 +129,19 @@ create window-date& 30 allot
 
 
 : send-open-window  ( - )
-   +WindowLineStartDate s" /home?nn=AuxOn"   esp-window-server SendTcp
+   +WindowLineStartDate s" /home?nn=AuxOn"   esp-window-server (SendTcp)
       if    s" is open."
       else  s" is offline.<br>Opening failed."
       then  window-status& place ;
 
 : send-close-window ( - )
-   +WindowLineStartDate s" /home?nn=AuxOff"  esp-window-server SendTcp
+   +WindowLineStartDate s" /home?nn=AuxOff"  esp-window-server (SendTcp)
       if    s" is closed."
       else  s" is offline.<br>Closing failed."
       then  window-status& place ;
 
 : send-stop-window  ( - )
-   +WindowLineStartDate s" /home?nn=AuxStop" esp-window-server SendTcp
+   +WindowLineStartDate s" /home?nn=AuxStop" esp-window-server (SendTcp)
       if    s" stopped."
       else  s" is offline.<br>Stopping failed."
       then  window-status& place ;

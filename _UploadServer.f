@@ -30,7 +30,7 @@ S" gforth" ENVIRONMENT? [IF] 2drop
 [defined]  AdminPage    [IF] needs Master.fs  [ELSE] needs slave.fs  [THEN] \ Includes the webserver-light
 -status
 : submit-task ( cfa - )
-  here !  stacksize4 newtask4 activate here @ execute ;
+  here !  spawn-task here @ execute ;
 
 [THEN]
 

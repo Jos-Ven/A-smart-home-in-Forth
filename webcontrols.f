@@ -614,9 +614,10 @@ also TCP/IP TCP/IP DEFINITIONS
 ' order alias order
 ' words alias words
 ' noop  alias Yes+
-' \ alias \\
 
-: /main.css ( - )  htmlpage$ off ['] CssStyles set-page ;
+
+: \\              ( - )  0 set-page postpone \ ;
+: /main.css       ( - )  htmlpage$ off ['] CssStyles set-page ;
 :  /favicon.ico   ( - )  ['] favicon.ico set-page ;
 : AskShutDownPage ( - ) s" Shutting down, continue?"   s" DoShutdown" ['] y/nPage set-page ;
 : AskRebootPage   ( - ) s" Rebooting, continue?"       s" DoReboot"   ['] y/nPage set-page ;

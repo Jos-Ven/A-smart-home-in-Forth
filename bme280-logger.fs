@@ -153,7 +153,7 @@ false value \Overshoot  \ Change \Overshoot into true to see the time after 10 s
 0 value TidLogValues
 
 : LogValues ( - ) 
-     stacksize4 newtask4 dup to TidLogValues activate (LogValues ;
+     make-task dup to TidLogValues activate (LogValues ;
 
 variable &bme280-FileRecords \ Pointer to the records in the logfile
 

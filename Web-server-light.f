@@ -1,4 +1,4 @@
-\ 23-02-2025 A web server by J.v.d.Ven.
+\ 28-02-2025 A web server by J.v.d.Ven.
 
 0 [IF]
 
@@ -8,6 +8,8 @@ Last tested under:
 - The Bullseye (Kernel: Linux 5.15.32+) on a raspberry zero
 - The bookworm (Kernel: Linux 6.1.0-9-amd64) on a PC
 - Windows 11
+
+Most important changes:
 
 07-11-2022: Uses recv instead of read-socket in the web-server under Linux.
             A browser should send a packet within 300 MS.
@@ -24,7 +26,7 @@ Last tested under:
 13-11-2023  - Moved the project to https://github.com/Jos-Ven/A-smart-home-in-Forth
             - Changes are now logged on Git.
 
-15-04-2024  - Most important: Adapted ShGet to solve a memory leak
+15-04-2024  - Adapted ShGet to solve a memory leak
 
 02-06-2024  - Made _SensorWeb1.fs more flexible. A number of sensors are now optional.
               You can now also add your own sensors and see their historical data.
@@ -39,6 +41,14 @@ Last tested under:
             - Added worker-threads and removed a number of execute-task for better multitasking.
             - Replaced +f by +a to get access to the forth tcp/ip and html dictionaries.
             - Added SendTcpInBackground to prevent time outs in the main task when a TCP message is send.
+
+27-02-2025  - Added bash to spawn to linux bash
+            - Added .ip and spawn-task
+            - Added (SendTcp)  ( msg$ cnt #server -- #sent )
+            - Changed SendTcp now does not return anything anymore.
+            - Changed bold and added norm for ansi terminals
+
+
 [THEN]
 
 needs Common-extensions.f
@@ -179,6 +189,9 @@ needs itools.frt
 \ Not used
 \ --------
 
+SYNONYM bold noop
+SYNONYM norm noop
+
 : ShutdownConnection ( sock - ) drop ;
 : NoTcpDelay         ( sock - ) drop ;
 
@@ -252,6 +265,9 @@ S" gforth" ENVIRONMENT? [IF] 2drop
 
 : warnmsg ( err_catch - )  (DoError) ;
 
+: bold   ( -- )  27 emit ." [1m" ;
+: norm   ( -- )  27 emit ." [0m" ;
+
 [THEN]
 
 
@@ -279,7 +295,7 @@ cell newuser xt-htmlpage
   FaviconLink +html| </head>| ;
 
 
-VOCABULARY TCP/IP \ Holds the words for incomming requests
+VOCABULARY TCP/IP \ Has the words for incomming requests
 
 : trim-stack	( ...?   - )
     sp@ sp0 @ u<  cr ." Stack "
@@ -287,6 +303,7 @@ VOCABULARY TCP/IP \ Holds the words for incomming requests
       else   ." UNDERFLOW."
       then
     sp0 @ sp! cr ;
+
 
 cell newuser depth-target
 
@@ -298,82 +315,89 @@ cell newuser depth-target
    s"  begin depth-target @ while  r> -1 depth-target +! repeat "
    evaluate ; immediate
 
-: cut-line	( adrBuf lenBuf -- adr len ) 2dup $0d scan nip - ;
-
-
-
 : .err-msg  ( adr cnt - )   cr .date space .time cr ." Stack error at: " type  ;
 
 : .catch-error ( adr len errcode - ) \ The line after the separators are removed.
-   >r cr ." ******* Request aborted! ******* "
-\in-system-ok  cr .date space .time  ."  Order: " order    \ Words must be defined in the TCP/IP dictionary !
+   >r cr ." ******* Request aborted! ******* "  \ On screen or in gf.log
+\in-system-ok  cr .date space .time ."  Order: " order \ Words must be defined in the TCP/IP dictionary !
     cr ." Error at: " 2dup  type
     r> warnmsg
-    StartHeader             \ Put the error on the html-page
+    StartHeader                 \ Put the error ALSO on an html-page
     +html| <body bgcolor="#FEFFE6"><font size="4" face="Segoe UI" color="#000000" ><BR> |
     +html| <br> | (date) +html  s"  " +html (time) +html
     +html| <br> <br> Page error.|
     +html| <br> <br> Error 404 at: | +html
     +html| <br> For web page: |
     xt-htmlpage @ dup 0<>
-       if    name>string +html
-       else  drop +html| Na |
+       if    name>string +html  \ Add the involved htmlpage
+       else  drop +html| Na |   \ Or Na if it does not exist
        then
     +html| </font></body></html>|  ;
 
-: evaluate_cleaned ( adr len - res-catch )
-  #255 min  evaluate xt-htmlpage @ dup 0<>
-    if    catch dup 0<>
-            if    xt-htmlpage @ name>string rot .catch-error
-            \in-system-ok order only forth tcp/ip seal
-            else drop
+: evaluate_cleaned ( adr len - res-catch )    \ Evaluates the request
+  #255 min  evaluate     \ The xt of the resource is stored in xt-htmlpage and the remainder is eveluated
+  xt-htmlpage @ dup 0<>  \ Checks if xt-htmlpage is stored
+    if    catch dup 0<>  \ Build the htmlpage withe its parameters
+            if    xt-htmlpage @ name>string rot .catch-error \ Show the error for the user
+            \in-system-ok order only forth tcp/ip seal       \ Set the order to tcp/ip alone
+            else drop    \ No error drop the flag of catch
             then
-    else  drop
+    else  drop           \ xt-htmlpage was 0 drop it
     then ;
 
 \ evaluating_tcp/ip looks after stack mismatches and syntax errors
 \ It does not protect against hanging definitions!
 : evaluating_tcp/ip { adr len -- }
      save-stack               \ Save/empty the stack here
-     adr len 2dup +log ['] evaluate_cleaned catch dup 0<>
-       if   >r 0 set-page
-             adr len r> .catch-error 0 to len
-       else  drop
+     adr len 2dup +log ['] evaluate_cleaned catch \ Starts evaluate_cleaned with catch
+     dup 0<>                  \ Errors from evaluate_cleaned ?
+       if   >r 0 set-page     \ Yes: disable the page with the error
+             adr len r> .catch-error 0 to len \ Replace it by a page with location of the error.
+       else  drop             \ No errors from evaluate_cleaned
        then
-    sp@ sp0 @ <>
+    sp@ sp0 @ <>              \ The stack should be empty here
         if  len 0>
                if  adr len
-                   2dup dump
-                   .err-msg
+                   2dup dump  \ On screen or in gf.log
+                   .err-msg   \ Show the date, time and location
                then
-            trim-stack   \ The stack should be empty without trimming it
+            trim-stack        \ The stack should be empty without trimming it
         then
-    restore-stack     \ Restore the previous state
-   ;
+    restore-stack ;           \ Restore the previous state
 
-: remove_seperator ( adr len char - ) \ replace them by a space
-   -rot bounds
-      ?do  i c@ over =
-             if   bl i c!
-             then
-      loop drop ;
+: remove_seperator ( adr len character - )
+   >r begin  r@ scan dup 0<> \ Character found?
+      while  bl 2 pick c!    \ Replace the involved character by a space
+             1 /string       \ Retry the remainder for adr' len'
+      repeat
+   r> 3drop ;
 
 : remove_seperators  ( adr len - )
   2dup [char] ? remove_seperator
   2dup [char] = remove_seperator
        [char] & remove_seperator ;
 
+: cut-line	( adrBuf lenBuf -- adr len ) 2dup $0d scan nip - ;
+
+: (handle-request) ( adrRequest lenRequest -- )
+   cut-line                                \ Extract the first line from the request
+   2dup remove_seperators
+   evaluating_tcp/ip
+   htmlpage$ lcount aSock @ send-html-page \ Send the html-page
+   xt-htmlpage off ;                       \ Clear xt-htmlpage
+
 cell newuser ms_req
+
 : see-request ( adrRequest lenRequest -- )
-   cr .date space .time cr ."  Request: "
-  2dup type  cr                       \ Optional to see the complete received packet
+   cr bold .date space .time norm cr ." Request: "
+   2dup type cr                       \ Optional to see the complete received packet
    ms@ ms_req !
    cut-line                           \ Extract the line with GET
 \   2dup type  cr                     \ Optional to see the first line only
    2dup remove_seperators
    ."  Evaluate: "  2dup type cr      \ Optional to see what goes to the interpreter of Forth
    evaluating_tcp/ip
-   ."  Html-page: " xt-htmlpage @ dup 0<>
+   ." Html-page: " xt-htmlpage @ dup 0<>
 \in-system-ok      if   .id
                    else drop ." Na"
                    then
@@ -381,11 +405,7 @@ cell newuser ms_req
    ms@ ms_req @ -
    cr 20 0 do [char] - emit loop  space . ." ms." cr xt-htmlpage off ;
 
-: (handle-request) ( adrRequest lenRequest -- )
-   cut-line  \ Extract the line with GET
-   2dup remove_seperators
-   evaluating_tcp/ip
-   htmlpage$ lcount aSock @ send-html-page xt-htmlpage off ;
+
 
 \  ' see-request is handle-request       \ To see the complete received request
    ' (handle-request) is handle-request  \ To see errors only
@@ -534,26 +554,40 @@ variable init-webserver-gforth-chain
 : NoTcpDelay ( tcp-sock - ) TCP_NODELAY 1 dup cell SetSolOpt ;
 
 maxcounted cell+ newuser SendTcp$
+2 cells newuser sendtcpStats  \ Map: host-id  #written
 
-: (SendTcp) ( msg$ cnt #server -- res|#send )    \ Changes char at msg$.
-    >r s" TCP/IP: ---> " upad place    2dup +upad
+
+: WaitOnAcepted ( &data - flag )
+   0 swap 1000 0
+      do dup c@ 0=    \ max 5 sec
+              if    nip true swap leave
+              then  5 ms
+         loop
+    drop ;
+
+HIDDEN DEFINITIONS
+
+: PrepLogTcp ( msg$ cnt --)
+    s" TCP/IP: ---> " upad place    2dup +upad
     s"  @" +upad r@ (.) +upad  upad"  +log
-    over swap SendTcp$ place
-    0 swap 1- c!                                 \ data saved
-    r@ open#Webserver dup 0=
-       if    drop r@ host-id>#server r>Online off
+     SendTcp$ place ;
+
+: (Send-Tcp$) ( #server -- )
+    dup >r open#Webserver dup 0=
+       if    drop r@ r>Online off
              r>  (.) upad place s"  can not be reached." +upad" +log false
        else  dup>r fileno  dup reuseaddr dup NoTcpDelay linger-tcp
              SOCK_CLOEXEC r@ SetMode
              SendTcp$ count r@ send-packet r>  close-socket r> drop
-       then ;                                    \ 0: connection failed
+       then ;
 
-
-: SendTcp ( msg$ cnt #server -- res|#send )      \ 0: connection failed
-    CheckGateway
-      if    (SendTcp)
+: (SendTcpTask) ( msg$ cnt #server -- )       \ Changes the count of msg$
+    dup >r CheckGateway
+      if    -rot 2dup PrepLogTcp drop
+            0 swap 1- c!  \ change the count of msg$
+            (Send-Tcp$)
       else  3drop log" No gateway." 0
-      then ;
+      then  dup r@ sendtcpStats 2! r> r>Online ! ;
 
 : SendTcptask  ( counted-msg$  #server --  )     \ Result in: >Online
     dup 99 >
@@ -564,24 +598,28 @@ maxcounted cell+ newuser SendTcp$
           s" Error:  ServerID "  upad place    (.) +upad
           s"  outside the range of #servers. "  +upad" +log
           0 swap c!
-     else >r count r@ SendTcp r> r>Online !
+     else >r count r> (SendTcpTask)
      then ;
 
-: WaitOnAcepted ( &data - flag )
-   0 swap 1000 0
-      do dup c@ 0=    \ max 5 sec
-              if    nip true swap leave
-              then  5 ms
-         loop
-    drop ;
+FORTH DEFINITIONS ALSO HIDDEN
 
 : SendTcpInBackground ( msg$ count  #server --  )
     >r  SendTcp$ place  SendTcp$ r> ['] SendTcptask spawn2
    SendTcp$ WaitOnAcepted drop ;
 
+: (SendTcp) ( msg$ cnt #server -- #sent )
+    dup >r CheckGateway
+      if    -rot PrepLogTcp (Send-Tcp$)
+      else  3drop log" No gateway." 0
+      then  dup r@ sendtcpStats 2! dup r> r>Online ! ;
+
+: SendTcp   ( msg$ cnt #server -- ) (SendTcp) drop ;
+
+PREVIOUS
+
 : Ask-StandBy ( - )
    FindOwnId 1 =
-     if s" Ask-StandBy" 0 (SendTcp) drop
+     if s" Ask-StandBy" 0 SendTcp
      then ;
 
 : LockConsole ( - )
@@ -661,7 +699,8 @@ maxcounted cell+ newuser SendTcp$
 #-2130706456 constant wsPing-      \ The value is reserved for UdpSender.f
 
 : Send1WsPing ( &-#server - )
-   dup @  0 rot c!  1- negate
+   dup @  0 rot c!     \ Task accepted
+   1- negate           \ Restore #server
    wsPing- (.) utmp$ place  space" +utmp$
    s"  wsping " +utmp$
    OwnIP$ count +utmp$
@@ -796,7 +835,7 @@ false value tid-http-server
            s" : Webserver started at: " +upad  +upad s" /home" +upad" Wall
      [ [DEFINED] DisableLogging ]        [IF] Log" Disable logging" 0 to hlogfile [THEN]
      [ s" gforth" environment? ]         [IF] [ 2drop ] ['] noop is dobacktrace
-       stacksize4 newtask4 dup to tid-http-server activate Starting-http-server  \ Background Gforth
+       make-task dup to tid-http-server activate Starting-http-server  \ Background Gforth
                                       \   Starting-http-server        \ Foreground Gforth
                                          [ELSE] Starting-http-server  \ Win32Forth
                                          [THEN] ;
@@ -1026,7 +1065,7 @@ defer udp-requests  ( adr len --)
 
 
 : Udp-server ( - )
-   stacksize4 newtask4 dup to Tid-Udp-server activate
+   make-task dup to Tid-Udp-server activate
    UdpPORT  create-udp-server dup to Udp-server-sock
      begin  web-server-sock
      while  Udp-server-sock   udpin$ dup off

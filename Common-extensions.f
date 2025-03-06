@@ -1,4 +1,4 @@
-Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 24-12-2024
+Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 26-02-2025
 
 : CloseFile ( fid - ) dup flush-file drop close-file drop ;
 
@@ -28,6 +28,9 @@ needs chains.fs
 : newfuser   ( <name> -- )                      \ Avoids error: Address alignment exception
    udp @ dup faligned swap - uallot drop float newuser ;
 
+: make-task  ( - task )  stacksize4 newtask4  ;
+: spawn-task ( - )  postpone make-task postpone activate ; immediate
+
 : upc ( char - upc-char )
    dup [char] a [char] z between if
       #32 invert and
@@ -44,8 +47,12 @@ needs chains.fs
 create spcs  maxcounted allot
 spcs         maxcounted blank
 synonym      cls        page
+synonym      es clearstacks
+
+VOCABULARY HIDDEN
 
 -status
+
 
 [THEN]
 
@@ -154,6 +161,8 @@ S" gforth" ENVIRONMENT? [IF] 2drop
     r/o open-pipe throw >r
     upad maxcounted r@ read-file throw
     r> close-pipe throw drop upad swap ;
+
+: bash ( -- ) s" bash" system ;
 
 : OsVersion" ( - adr cnt ) s" cat /etc/os-release | grep VERSION=" ShGet 1- ;
 

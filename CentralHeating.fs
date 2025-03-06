@@ -235,7 +235,7 @@ ALSO HTML
      then ;
 
 : JobNightService  ( - )
-   stacksize4 newtask4 activate    60000 ms
+   spawn-task  60000 ms
      begin   web-server-sock
      while   ConditionsNightMode   WaitTillNextMinute
      repeat

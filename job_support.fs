@@ -143,7 +143,7 @@ HumidityDecreaseTimeSpan HumidityIncreaseTimeSpan 1 + max constant #minmalFiledR
 
 : LowLevelPressureWarning      ( - )
    PressureSamples  AverageSamples 1007e f<  \ Give a warning when the presure gets below 1007 Hpa
-            if    s" /w10" 11 SendTcp drop       \ The 11th server is an ESP8266F
+            if    s" /w10" 11 SendTcp        \ The 11th server is an ESP8266F
             then ;
 [THEN]
 
@@ -160,7 +160,7 @@ HumidityDecreaseTimeSpan HumidityIncreaseTimeSpan 1 + max constant #minmalFiledR
    [DEFINED] FloordataToMsgBoard  [IF]  0e send-data-humidity sent-temp-hum-to-msgboard Send-Floor  [THEN]  ;
 
 : EachMinuteJob ( - )
-   stacksize4 newtask4 dup to  TidEachMinuteJob activate
+   make-task dup to  TidEachMinuteJob activate
    60000 ms
    [DEFINED] SendingState   [IF] Send-Floor 0e  send-data-humidity sent-temp-hum-to-msgboard [THEN]
      begin    web-server-sock

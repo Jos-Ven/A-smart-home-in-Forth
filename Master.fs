@@ -200,8 +200,7 @@ Needs SetVersionPage.fs
 2500 constant TimeoutUpdate
 
 : SubmitUpdate ( - ) \ Send an update signal to all other systems
-   stacksize4 newtask4 activate  SentUpdateSignalToAllSystems
-   TimeoutUpdate ms  ;
+   SentUpdateSignalToAllSystems TimeoutUpdate ms  ;
 
 : AllShutDownWarning ( - htmlpage$ lcount )
    s" Shutting ALL down, continue?" s" DoSentShutdownSignalToAllSystems" ['] y/nPage set-page ;
@@ -315,7 +314,7 @@ Needs SetVersionPage.fs
 
 
 : MsgGfSlavesRebuildArpTable ( - )
-    stacksize4 newtask4 activate
+    spawn-task
     log" "  range-Gforth-servers 2@
      ?do  i TcpPort?                \ Filter ports 80 and 8080
           if  i ServerHost <>       \ Exclude myself
@@ -368,14 +367,15 @@ TCP/IP DEFINITIONS \ Adding the requests to the tcp/ip dictionary
    timer-reset IncreaseVersionFile
    UpdateOption 6 =
      if     AllShutDownWarning
-     else   SubmitUpdate
-     then ;
+     else  ['] SubmitUpdate spawn ['] bye-page set-page
+     then
+  ;
 
 : Synchronize                   ( -  ) \ Leave the version number unchanged
    timer-reset UpdateOption 6 =
      if    AllShutDownWarning exit
      then
-   stacksize4 newtask4 activate SentUpdateSignalToAllSystemsToSync \ Send an update signal to all systems
+   spawn-task SentUpdateSignalToAllSystemsToSync \ Send an update signal to all systems
    TimeoutUpdate ms ;
 
 : DoSentShutdownSignalToAllSystems ( - )  timer-reset 6 to UpdateOption  SubmitUpdate ;
@@ -429,7 +429,7 @@ TCP/IP DEFINITIONS \ Adding the requests to the tcp/ip dictionary
 
 : ask_time ( host-id - )
    dup 256 <=
-    if    dup host-id>#server r>Online on SendTCPTimesync
+    if    dup  r>Online on SendTCPTimesync
     else  drop log" Invalid host-id"
     then ;
 

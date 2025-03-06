@@ -35,7 +35,7 @@ needs gpio.fs
          then
   300 ms again ;
 
-: RebootCheck ( - ) stacksize4 newtask4  activate OnRestartButton  ;
+: RebootCheck ( - ) spawn-task OnRestartButton  ;
 
 RebootCheck
 \\\

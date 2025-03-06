@@ -24,7 +24,7 @@
 \ Moved time related calculations to TimeDiff.f
 
 needs TimeDiff.f
-Marker Sun.f .latest 
+Marker Sun.f .latest
 
 \ -- For use with standard ANS Forth, uncomment line below:
 
@@ -43,8 +43,6 @@ fvariable longitude
 
 \ Sun's zenith for sunrise/sunset:
 fvariable zenith \ ok
-
-S" gforth" ENVIRONMENT? [IF] 2drop   VOCABULARY HIDDEN  [THEN]
 
 HIDDEN DEFINITIONS
 

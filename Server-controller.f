@@ -87,16 +87,15 @@ create my-ip-addr-buf maxstring allot
 
 S" gforth" ENVIRONMENT? [IF] 2drop
 
-include lib.fs
-library libc libc.so.6
-
 6  constant ipproto_tcp
 17 constant ipproto_udp
 
 \ S" unix/socket.fs" INCLUDED
 S" socket.fs" INCLUDED
 
-c-library socketIPv4
+needs  lib.fs
+
+library libc libc.so.6
 1 (int) libc gethostbyname gethostbyname ( name -- hostent )
 end-c-library
 
@@ -104,6 +103,8 @@ c-library socketshutdown
     \c #include <sys/socket.h>
    c-function shutdown shutdown n n -- n ( sockfd how - res )
 end-c-library
+
+also forth
 
 0x02000000 constant SOCK_CLOEXEC
 0x02000000 constant O_CLOEXEC
@@ -114,10 +115,10 @@ end-c-library
 : (SetMode)   ( flag fileno  -- ) f_setfl rot fcntl ?ior ;
 : SetMode     ( flag fd  -- )     fileno (SetMode) ;
 
-
 0 constant SHUT_RD
 1 constant SHUT_WR
 2 constant SHUT_RDWR
+
 
 : host>addr ( addr u -- x|0 )
     \G converts a internet name into a IPv4 address
@@ -199,7 +200,6 @@ end-c-library
     \ log" Can't connect"  \ Optional
     0 ;
 
-
 : open-port-socket  ( c-addr u port sock_ ipproto -- handle|0 )
     swap >hints    \ Sets ai_socktype
     AF_INET hints ai_family   l!
@@ -238,8 +238,8 @@ $2f constant /max-short$ \ max length of short$
   xfield:   >5mLoad          \ The load of the last 5 minutes ( See $ Uptime )
   xfield:   >Master          \ True if that system is the master
 
-  short$:   >ipAdress        \ The name of a server or it's IP-adress + r>+HostName
-  short$:   >HostName        \ The host name
+  short$:   >ipAdress        \ The IP-adress
+  short$:   >HostName        \ The host name or host-id
   short$:   >account         \ The User name or description ( Optional )
   short$:   >password        \ Password User ( Optional )
   xfield:   >F0              \ Wait time confirmation
@@ -249,24 +249,33 @@ end-structure
   xfield:   >sock            \ The CFA to open a socket
 end-structure
 
+
+
+: host-id>#server ( #server|host-id -  #server )
+   dup 99 >
+     if   100 /mod drop
+     then ;
+
+
+: r>server      ( #server|host-id - &recordServer )
+     host-id>#server /server * &servers + ;
+
 defer &socks ( - UserArray&socks )
-: r>sock ( n - addr ) /sock * &socks + ;
+: r>sock (  #server|host-id - addr ) host-id>#server /sock * &socks + ;
 
-\ : r>sock      ( n - addr ) r>server >sock ;
 
-: r>server      ( n - &recordServer ) /server * &servers + ;
-: r>open        ( n - addr ) r>server >open ;
-: r>port        ( n - addr ) r>server >port ;
-: r>Online      ( n - addr ) r>server >Online ;
-: r>Version     ( n - addr ) r>server >Version ;
-: r>Uptime      ( n - addr ) r>server >Uptime ;
-: r>5mLoad      ( n - addr ) r>server >5mLoad ;
-: r>Master      ( n - addr ) r>server >Master ;
-: r>ipAdress    ( n - addr ) r>server >ipAdress ;
-: r>HostName    ( n - addr ) r>server >HostName ; \ restore Data r>_account
-: r>account     ( n - addr ) r>server >account ; \ ADD >> r>HostName 60  r>_account
-: r>password    ( n - addr ) r>server >password ;
-: r>F0          ( n - addr ) r>server >F0 ;
+: r>open        ( #server|host-id - addr ) r>server >open ;
+: r>port        ( #server|host-id - addr ) r>server >port ;
+: r>Online      ( #server|host-id - addr ) r>server >Online ;
+: r>Version     ( #server|host-id - addr ) r>server >Version ;
+: r>Uptime      ( #server|host-id - addr ) r>server >Uptime ;
+: r>5mLoad      ( #server|host-id - addr ) r>server >5mLoad ;
+: r>Master      ( #server|host-id - addr ) r>server >Master ;
+: r>ipAdress    ( #server|host-id - addr ) r>server >ipAdress ;
+: r>HostName    ( #server|host-id - addr ) r>server >HostName ; \ restore Data r>_account
+: r>account     ( #server|host-id - addr ) r>server >account ; \ ADD >> r>HostName 60  r>_account
+: r>password    ( #server|host-id - addr ) r>server >password ;
+: r>F0          ( #server|host-id - addr ) r>server >F0 ;
 
 : place-short$  ( str len dest - )
     over /max-short$ 1- > abort" String too long" place ;
@@ -275,9 +284,9 @@ defer &socks ( - UserArray&socks )
     dup >r r>password place-short$ r> r>account place-short$ ;
 
 : .string.l    ( sdr cnt fillup - )  -rot tuck type - 1 max spaces ;
-: ipAdress$    ( server# - name len ) r>ipAdress count ;
-: .servername  ( server# - ) space r>HostName count 14 .string.l ;
-: +servername  ( server# - ) space" +utmp$ r>HostName count +utmp$  utmp" write-log-line ;
+: ipAdress$    ( #server|host-id - name len ) r>ipAdress count ;
+: .servername  ( #server|host-id - ) space r>HostName count 14 .string.l ;
+: +servername  ( #server|host-id - ) space" +utmp$ r>HostName count +utmp$  utmp" write-log-line ;
 
 : allocate-server-record ( - )
     here  /server allot #servers 0=
@@ -300,12 +309,12 @@ defer &socks ( - UserArray&socks )
 : ]Servers ( - )  \ Allocating a user array for socks
      s" #servers /sock * newuser &socks_  ' &socks_ is &socks"  evaluate ; immediate
 
-: close-#server  ( server# - ) r>sock dup @ close-socket off ;
+: close-#server  ( #server|host-id - ) r>sock dup @ close-socket off ;
 : close-servers ( from to - )  ?do   i close-#server   loop ;
 
 \ NOTE: Open commands should be able to use the following open-#server definition.
 
-: open-#server ( server# - )              dup r>open @ execute ;
+: open-#server ( #server|host-id - )              dup r>open @ execute ;
 : open-servers ( server#nX server#n0 - )  ?do   i open-#server  loop ;
 : test-servers ( - ) #servers 0  do  i dup open-#server close-#server  loop ;
 
@@ -405,13 +414,10 @@ S" gforth" ENVIRONMENT? [IF] 2drop
     to ServerHost
     cr ." Subnet$: " SetSubnet subnet$ count type cr ;
 
-: host-id>#server ( #server|host-id -  #server )
-   dup 99 >
-     if   host-id>ip$ FindServer#
-     then ;
 
 [THEN]
 
+: .ip        ( -- ) GetIpHost$ type  ;
 
 : CompleteIp ( n - CompleteIp$ count ) \ Places the subnet. before n
    subnet$ count utmp$ place (.) +utmp$ utmp" ;
@@ -452,6 +458,7 @@ S" gforth" ENVIRONMENT? [IF] 2drop
      then     ( filename$ count - fd )
    ['] FileIp ForAllServers
    CloseFile ;
+
 
 \s
 

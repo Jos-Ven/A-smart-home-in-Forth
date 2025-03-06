@@ -289,7 +289,7 @@ defined Master.fs not [if]
             cr .date space .time ."  Bye TimeCheck" Bye
       then ;
 
-: StartTimeCheck ( - ) stacksize4 newtask4 activate TimeCheck ;
+: StartTimeCheck ( - ) spawn-task TimeCheck ;
 
 ' StartTimeCheck init-webserver-gforth-chain chained
 

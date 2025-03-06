@@ -1,4 +1,4 @@
-Marker SetVersionPage.fs  .latest 
+Marker SetVersionPage.fs  .latest
 
 : SetVersionPage  ( - )
    s"  SetVersion" NearWhite 0 <HtmlLayout>

@@ -673,7 +673,7 @@ TCP/IP DEFINITIONS \ Adding the page and it's actions to the tcp/ip dictionary
    &bme280Record >Humidity f@ 100.e f* f>s (.) tmp$ place s"  " tmp$ +place
    (standby) (.) tmp$ +place
    s"  HumidityStandBy"  tmp$ +place
-   tmp$ count rot SendTcp drop ;
+   tmp$ count rot SendTcp ;
 
 : pm25         ( pm2.5 from - ) drop to (pm25) @hm_time to (Time_pm25) ;
 
