@@ -1,11 +1,11 @@
-\ 28-02-2025 A web server by J.v.d.Ven.
+\ 14-04-2025 A web server by J.v.d.Ven.
 
 0 [IF]
 
 For small web-applications.
 Runs in windows under Win32Forth 6.15.04 or in Linux 8 or better under Gforth.
 Last tested under:
-- The Bullseye (Kernel: Linux 5.15.32+) on a raspberry zero
+- The Bullseye (Kernel: Linux 5.15.32+) on a Raspberry zero W
 - The bookworm (Kernel: Linux 6.1.0-9-amd64) on a PC
 - Windows 11
 
@@ -48,7 +48,8 @@ Most important changes:
             - Changed SendTcp now does not return anything anymore.
             - Changed bold and added norm for ansi terminals
 
-
+14-04-2025    Now the Forth takes the warming up by the sun in account before switching
+              the central system on. See the start of CentralHeating.fs for its usage.
 [THEN]
 
 needs Common-extensions.f

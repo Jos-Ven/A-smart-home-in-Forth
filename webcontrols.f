@@ -1,6 +1,7 @@
-marker webcontrols.f  .latest \ 13-02-2025 webcontrols.f by J.v.d.Ven
+needs  Common-extensions.f    \ Basic tools for Gforth and Win32Forth
+marker webcontrols.f  .latest \ 13-04-2025 webcontrols.f by J.v.d.Ven
 Needs  Web-server-light.f     \ Contains the htmlpage$ buffer
-Needs TimeDiff.f
+Needs  TimeDiff.f
 
 \ Tags added to the buffer in htmlpage$:
 
@@ -600,7 +601,7 @@ s" favicon.ico" r/o bin open-file throw
 dup dup file-size throw d>s dup cell+ allocate throw
 dup to &favicon  \ hdnl hndl size &favicon
 cell+ -rot swap read-file throw  swap CloseFile
-&favicon !   &favicon lcount
+&favicon !
 
 : favicon.ico     ( - ) &favicon lcount  htmlpage$ lplace ;
 

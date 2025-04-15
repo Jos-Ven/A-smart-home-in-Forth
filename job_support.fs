@@ -172,13 +172,15 @@ HumidityDecreaseTimeSpan HumidityIncreaseTimeSpan 1 + max constant #minmalFiledR
       repeat ;
 
 
-cr .( Starting the support jobs. )  \ Receiving servers should be adapted
+cr 100 ms .( Starting the support jobs. )  \ Receiving servers should be adapted
 
 EachMinuteJob
 
 : (KillTasks ( - )
-    TidEachMinuteJob       kill
-    [DEFINED] LogValues      [IF] TidLogValues        kill [THEN] ;
+    TidEachMinuteJob       kill  
+    [DEFINED] LogValues          [IF] TidLogValues       kill [THEN]
+    [DEFINED] TidMonitorTrendJob [IF] TidMonitorTrendJob kill [THEN]
+;
 
 ' (KillTasks is KillTasks
 

@@ -152,10 +152,10 @@ false value \Overshoot  \ Change \Overshoot into true to see the time after 10 s
 
 0 value TidLogValues
 
-: LogValues ( - ) 
+: LogValues ( - )
      make-task dup to TidLogValues activate (LogValues ;
 
-variable &bme280-FileRecords \ Pointer to the records in the logfile
+1 cells newuser &bme280-FileRecords \ Pointer to the records in the logfile
 
 : r>bme280-FileRecord      ( n - &FileRecord ) \ Pointer to 1 record in the logfile
    /bme280Record * &bme280-FileRecords @ + ;
@@ -202,6 +202,10 @@ PREVIOUS
      if    unmap-file
      else  2drop
      then  ;
+
+: findDateTarget ( &records data-size &date - &records data-size #record )
+   >r &bme280-FileRecords @ #records @ r>
+   2@ record-size @ bsearch-doubles 2 pick - record-size @ / 1+ ;
 
 \Overshoot  [if] cr .( Wait at least 2 minutes) cr (LogValues abort  [then]
 \\\

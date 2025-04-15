@@ -408,7 +408,8 @@ S" gforth" ENVIRONMENT? [IF] 2drop
 : WaitForIpAdress ( - )
     WaitForGateway
     cr cr .date space .time  ."  Wait for an IP address."
-    cr .date space .time 3000 ms ."  Got IP: " FindOwnId dup 0< abort" IP adress not in table"
+    cr .date space .time 3000 ms ."  Got IP: " FindOwnId dup
+     0< abort" IP adress not in table. No connection, or try: delete ip_table.bin"
     true over r>Online !
     dup r>ipAdress count type
     to ServerHost

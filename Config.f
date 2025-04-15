@@ -1,4 +1,3 @@
-marker Config.f   .latest \ For saving data, variables and strings in a file.
 needs table_sort.f
 
 0 value /ConfigDef        \ Keeps how big the size of the config file should be.
@@ -7,6 +6,7 @@ create ConfigFile$   maxcounted allot   s" Config.dat" ConfigFile$ place
 
 
 S" win32forth" ENVIRONMENT? [IF] DROP
+needs Common-extensions.f
 
 map-handle config-mhndl
 
@@ -30,6 +30,8 @@ S" gforth" ENVIRONMENT? [IF] 2drop
 : DisableConfigFile   ( - )             config-ghndl 2@ 2dup MS_SYNC msync drop  unmap ;
 
 [THEN]
+
+marker Config.f    .latest \ For saving data, variables and strings in a file.
 
 : file-exist?         ( adr len -- true-if-file-exist )  file-status nip 0= ;
 : file-size>s         ( fileid -- len )       file-size drop d>s  ;

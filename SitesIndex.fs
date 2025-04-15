@@ -155,7 +155,6 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
     <</td-legend>> ;
 
 
-
 : Links-first-row ( - )
 \ A page with links to an option or device.
 \ It uses ServerId's that are created in autogen_ip_table.fs
@@ -179,7 +178,7 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
     s" Rpi Administration"  <<td-legend>>
     s" administrator-work-svgrepo-com.svg" +hfile s" /Admin"       FindOwnId  svg-link
     <</td-legend>> ;
-                                                                                  0
+
 : .Editnote ( - )
     s" Edit note"  <<td-legend>>
     s" document-svgrepo-com.svg"   +hfile  s" /ModifyNote"         FindOwnId  svg-link

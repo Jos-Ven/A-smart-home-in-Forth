@@ -1,3 +1,4 @@
+needs Common-extensions.f
 marker -table_sort.f
 
 
@@ -146,15 +147,6 @@ needs /circular      ../esp/extra.fth
 
 : open-file-ptrs   ( name -- hndl )
    count r/w bin open-file abort" Can't open index file." ;
-
-s" cforth" ENVIRONMENT? 0= [IF]
-
-: extend-file   ( size hndl - )
-    dup>r file-size drop d>s +
-    s>d r@ resize-file abort" Can't extend file."
-    r> CloseFile ;
-
-[THEN]
 
 : add-ptrs      ( record-size aptrs  #start #end - )
       do  2dup i * swap   i cells + !

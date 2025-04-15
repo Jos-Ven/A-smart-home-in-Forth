@@ -1,6 +1,14 @@
 needs multiport_gate.f
 marker CentralHeating.fs .latest
 
+0 [if]
+14-04-2025    Now the Forth takes the warming up by the sun in account before switching
+              the central system on. To update the input:
+              1. Set the time with the button SetTimespan on page: Central heating
+              2. Set Start / End on the history page in part: Settings with the button Range
+              3. Hit the button ColdTrend on the page Central heating.
+              Delete file TempChar.dat to disable this feature.
+[then]
 \ -------------- Settings ---------------------------
 
 cr .( Assigned GPio pins )
@@ -8,7 +16,7 @@ cr .( Assigned GPio pins )
 0 \ 1st device in the table. The following GpioPin(s) are used:
 \ GPIOpin#    Name     Resistor         Input OR Output
  16 GpioPin:  Reset    +PullUpResistor  dup AsActiveLow AsPinInput
- 24 GpioPin:  chNight  AsPinOutput      \ Connected to the night mode input of a thermostat through a relais.
+ 24 GpioPin:  chNight  AsPinOutput       \ Connected to the night mode input of a thermostat through a relais.
 
  cr dup . .( Gpio pin[s] used.) to #pins \ Lock table and save the actual number of used pins
     InitPins  .pins                      \ Start and list the used GPio pins.
@@ -16,9 +24,9 @@ cr .( Assigned GPio pins )
 
 \ -------------- Settings ---------------------------
 \ Mapped in Config.dat
-
 ConfigVariable StartTimeOutTempLimit
 ConfigVariable EndTimeOutTempLimit
+ConfigVariable GrabDate
 EnableConfigFile
 
 StartTimeOutTempLimit @ EndTimeOutTempLimit @ + 0=
@@ -41,20 +49,125 @@ StartTimeOutTempLimit @ EndTimeOutTempLimit @ + 0=
 
 2variable ch-autom-mp
 0 ch-autom-mp bInput: i_ch_TimeSpan  \ 0 OpeningHours-
-              bInput: i_ch_Present   \ 1 inverted StandBy-
-              bInput: i_ch_Automatic \ 2 inverted i_ch_Manual bInput@
+              bInput: i_ch_ColdTrend \ 1 The sun does not heatup
+              bInput: i_ch_Present   \ 2 inverted StandBy-
+              bInput: i_ch_Automatic \ 3 inverted i_ch_Manual bInput@
 >#bInputs c!                   \ 3
 
 2variable ch-gui-mp
 0 ch-gui-mp bInput: i_ch_Mode        \ 0 Active when the central heating is set to the nightmode
             bInput: i_ch_Sleep       \ 1 Active: Freezes until the next day
-            bInput: i_ch_Manual      \ 2  Active for manual control
+            bInput: i_ch_Manual      \ 2 Active for manual control
 >#bInputs c!                   \ 3
 
 2variable ch-out-mp
-0 ch-out-mp bInput: i_ch_autom       \ 0  Output from the result of ch-autom-mp
-            bInput: i_ch_gui         \ 1  Output from the result of ch-gui-mp
+0 ch-out-mp bInput: i_ch_autom       \ 0 Output from the result of ch-autom-mp
+            bInput: i_ch_gui         \ 1 Output from the result of ch-gui-mp
 >#bInputs c!                         \ 2 The result will control the ventral heating
+
+
+\ -------------- Sun heating --------------
+
+\ TempChar
+begin-structure /TempChar
+   field: >TcTime          \ Time to measure
+  xfield: >TcTemperature   \ Measured temperature
+  xfield: >TcMinimal       \ Minimal predicted
+end-structure
+
+0 value &TempChar          5 constant #TempCharRecords
+
+: &TempChar-Size  ( -  &TempChar Size ) &TempChar #TempCharRecords /TempChar * ;
+: >TempChar       ( n - adr )           /TempChar * &TempChar + ;
+
+here &TempChar-Size allot drop to &TempChar
+
+: >NeedsTempChar! ( time-mmhh n - ) ( f: TcMinimal - )
+     >TempChar tuck  >TcTime !  >TcMinimal f! ;
+
+: .TempChars ( - )
+   &TempChar-Size bounds
+      do  cr i dup .
+            dup >TcTime  @ .
+            dup >TcTemperature f@ f.
+                >TcMinimal     f@ f. /TempChar
+      +loop ;
+
+: grabrec# (  vadr count -  vadr count record# ) ( f: localtics - )
+   Time&DateLocal-from-UtcTics
+   3drop 100 * + 100 * nip GrabDate @ here 2!
+   here findDateTarget ;
+
+1800e fconstant 30minutes
+
+: SaveGrabbedRecord ( >TempChar record# - )
+   >r dup >TcTime  r@ r>TimeBme280 @ 100 / swap !
+   r> r>Temperature f@ fdup
+   dup >TcTemperature f!
+   dup &TempChar <>
+     if   fdup dup /TempChar - >TcTemperature f@ f/ f*
+     then
+   >TcMinimal f! ;
+
+: ClrTcTemperature ( - )
+    &TempChar-Size bounds
+       do   0e0 i >TcTemperature f!   /TempChar +loop ;
+
+create TempCharFile ," TempChar.dat"
+
+: WriteGrabbed ( - ) &TempChar-Size TempCharFile count file-it ;
+: ReadGrabbed  ( - ) &TempChar-Size TempCharFile count @file drop ;
+
+TempCharFile count file-exist?
+  [if]   ReadGrabbed
+  [else] 0 GrabDate !
+ 1100 67.18e0 0 >NeedsTempChar!  \ Forcing the ColdTrend to Y, so it will not block the central heating
+ 1130 68.0495365729766e0 1 >NeedsTempChar!
+ 1200 68.5511265447632e0 2 >NeedsTempChar!
+ 1230 69.2051284177007e0 3 >NeedsTempChar!
+ 1300 69.4829664224991e0 4 >NeedsTempChar!
+  [then]
+
+: grabchars ( - )
+   MapBme280Data
+   0 StartTimeOutTempLimit @       \ Uses StartTimeOutTempLimit from page: central heating  part: start time
+   100 /mod
+   Startdate 2@ nip dup GrabDate ! \ Uses Startdate from the history page in part: settings button range
+   100 /mod 100 /mod               \  -  ss mm uu dd mm yearLocal
+   UtcTics-from-Time&Date fdup UtcOffset f- 30minutes f- \ Must start 30 minutes earlier
+   #TempCharRecords 0
+      do  fdup i s>f  30minutes f*  f+  grabrec#  i >TempChar swap  SaveGrabbedRecord
+      loop
+   UnMapBme280Data  fdrop .TempChars cr ClrTcTemperature WriteGrabbed ;
+
+: TooCold? ( >TempChar - flagCold )
+   dup >TcTemperature f@
+   dup &TempChar =
+    if    false i_ch_ColdTrend bInput!
+          >TcMinimal f@ f<
+    else  dup  /TempChar - >TcTemperature f@
+          fover fswap
+          f/ f*  >TcMinimal f@ f<
+    then ;
+
+: TCmeasure! ( >TempChar - flagCold ) ( f: TcTemp - )
+    dup >TcTemperature f! TooCold? ;
+
+: MonitorTrend1Day ( - )
+    ClrTcTemperature true i_ch_ColdTrend bInput!    &TempChar-Size bounds
+      do    i >TcTime @ WaitUntil
+            fdBme280  Bme280>f fdrop fnip i TCmeasure!
+            i &TempChar <> and
+                if leave then
+            /TempChar
+      +loop   log" Exit." ;
+
+0 value TidMonitorTrendJob
+
+: MonitorTrendJob ( - )
+   .time .TempChars cr
+   make-task dup to  TidMonitorTrendJob activate
+   begin  MonitorTrend1Day again ;
 
 
 \ -------------- Relations between the multi port gates ---
@@ -74,9 +187,9 @@ StartTimeOutTempLimit @ EndTimeOutTempLimit @ + 0=
 
 : eval-ch-net ( - output-ch-net ) \ Updates all relations and evaluate the network.
    set-ch-override \ add_inputs            \ Flag Output  To destination
-    eval_gui
-    [ ch-autom-mp all-bits ] literal ch-autom-mp match-mp  i_ch_autom bInput!
-    ch-out-mp any-mp ;
+   eval_gui
+   [ ch-autom-mp all-bits ] literal ch-autom-mp match-mp  i_ch_autom bInput!
+   ch-out-mp any-mp ;
 
 : .eval-ch-net   ( - )
    eval-ch-net drop               \ Update all relations and evaluate the network.
@@ -90,7 +203,7 @@ StartTimeOutTempLimit @ EndTimeOutTempLimit @ + 0=
    3 ch-gui-mp   >threshold c!
    1 ch-out-mp   >threshold c!
    0 ch-autom-mp !   0 ch-gui-mp !   0 ch-out-mp ! eval-ch-net drop
-   i_ch_Manual bInputOn ;
+   i_ch_Manual bInputOn MonitorTrendJob ;
 
 init-ch-net
 
@@ -148,6 +261,12 @@ ALSO HTML
          <td>  OpeningHours- i_ch_Automatic@  and .y|n </td>
          </td><td>    s" tStart" StartTimeOutTempLimit @  <InputTime> </td>
          </td><td>    s" tEnd"   EndTimeOutTempLimit @    <InputTime> </td>
+    <tr><tdL>  </form> <form> ButtonWhite black s" ColdTrend"    nn"  <StyledButton> </form> <form>  </td><td>
+      i_ch_ColdTrend bInput@ .y|n  </td>  2 <#tdL>
+
+<aHREF" +homelink  +HTML| /home">| +HTML| Date&nbsp;setting:| GrabDate @ .Html </a>
+\ +HTML| From: | GrabDate @ .Html
+</td></tr>
          <tr><tdL> +HTML| Present: |   </td><td>
                    i_ch_Present bInput@ .y|n  </td>  2 <#tdL> </td></tr>
          <tr> 4 <#tdL>   HTML| State: |  <<strong>>
@@ -263,6 +382,8 @@ ALSO TCP/IP DEFINITIONS \ Adding the page and it's actions to the tcp/ip diction
 \ For: http://192.168.0.207:8080/ch%20menu?nn=SetTimespan&tStart=11%3A30&tEnd=23%3A59
 : SetTimespan ( - )
    parse-time  StartTimeOutTempLimit ! parse-time  EndTimeOutTempLimit ! ConditionsNightMode ;
+
+: ColdTrend ( - )  TidMonitorTrendJob kill  grabchars  MonitorTrendJob ;
 
 FORTH DEFINITIONS PREVIOUS PREVIOUS
 \s

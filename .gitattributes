@@ -1,0 +1,10 @@
+* text=auto
+*.f   text eol=crlf
+*.fs  text eol=crlf
+*.frt text eol=crlf
+*.sh  text eol=lf
+*.jpg -text
+*.pdf -text
+*.svg -text
+*.fbin binary
+*.zip binary

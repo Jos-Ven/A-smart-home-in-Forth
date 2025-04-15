@@ -1,12 +1,10 @@
-Marker TimeDiff.f  .latest \ For Gforth and Win32Forth. By J.v.d.Ven 16-01-2025
-
-\ Time specifications like  ( ss mm uu JD -  ) are in UTC
-\ unless otherwise indicated like: ( hhmmTargetLocal -- ) or ( f: UtcTics - ss mm uu dd mm yearLocal )
-
-
 needs Common-extensions.f
 needs calencal.f
 needs jd.f
+
+Marker TimeDiff.f   .latest \ For Gforth and Win32Forth. By J.v.d.Ven 14-04-2025
+\ Time specifications like  ( ss mm uu JD -  ) are in UTC
+\ unless otherwise indicated like: ( hhmmTargetLocal -- ) or ( f: UtcTics - ss mm uu dd mm yearLocal )
 
 defer sync-time ' noop is sync-time
 

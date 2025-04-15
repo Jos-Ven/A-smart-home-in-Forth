@@ -8,7 +8,7 @@ marker LightsControl.fs  .latest
 \ -------------- Settings ---------------------------
 
       30  value MinutesBeforeSunSet   \ When to use an LDR to seen that it is getting dark
-f# 1.55e fvalue ldr_lights_low        \ To trigger the lights
+  f# 2.1e fvalue ldr_lights_low        \ To trigger the lights
        4  value lights-#changes-max   \ No automates changes today when this has been reached.
 
 \ -------------- Switching --------------------------
@@ -18,16 +18,16 @@ f# 1.55e fvalue ldr_lights_low        \ To trigger the lights
 
 : LightsOff ( - )
 \ Message                               ServerID Communication / GPIO
-  s" -2130706452 F1 Q:1"                      12 (SendUdp)
-  s" nn=On  NoReply-HTTP"                       6 SendTcpInBackground
+  s" -2130706452 F1 Q:1"                      12 SendConfirmUdp$ drop \ nrs
+  s" nn=On  NoReply-HTTP"                      6 SendTcpInBackground
   s" /BForm?nn=OnSwitchOff NoReply-HTTP"      11 SendTcpInBackground
   23 17 do   s" LedsOff NoReply-HTTP"          i SendTcpInBackground
         loop ;
 
 : LightsOn ( - )
    lights-#changes  1+ to lights-#changes
-   s" -2130706452 F0 Q:2 On"                  12 (SendUdp)
-   s" nn=Off  NoReply-HTTP"                     6 SendTcpInBackground
+   s" -2130706452 F1 Q:2 On"                  12 (SendUdp) \ show
+   s" nn=Off  NoReply-HTTP"                    6 SendTcpInBackground
    s" /BForm?nn=OnSwitchOn NoReply-HTTP "     11 SendTcpInBackground
    s" LedsOn NoReply-HTTP "                   17 SendTcpInBackground
    23 18 do  s" LightShowOn NoReply-HTTP"      i SendTcpInBackground
@@ -112,7 +112,7 @@ create Lightchange$ 20 allot
 
 : lights-on/off ( - ) \ Used at EachMinuteJob in job_support.fs
    eval-light-net dup previous-state-lights <>
-     if dup to previous-state-lights
+     if dup to previous-state-lights PingTcpServers 150 ms
           if   LightchangeOn
           else LightchangeOff
           then
@@ -137,7 +137,7 @@ create Lightchange$ 20 allot
 
 \ ------------- Initial settings---------------------
 
-sunset-still-today? dup      i_lights_sunset bInput!    i_night-mode bInput!
+sunset-still-today? dup      i_lights_sunset bInput!    i_night-mode bInput! drop
 i_lights_present  bInputOn   i_switch        bInputOff
 reset-lights                 i_Manual_lights bInputOn
 Lightchange s" :Started." Lightchange$ +place
@@ -247,8 +247,8 @@ ALSO HTML
 ALSO TCP/IP DEFINITIONS
 
 : /LightsControl ( - ) ['] lights-control set-page ;
-: AutoLightOn    ( - ) i_switch bInputOn  i_Manual_lights bInputOn ForceChange ;
-: AutoLightOff   ( - ) i_switch bInputOff i_Manual_lights bInputOn ForceChange ;
+: AutoLightOn    ( - ) i_switch bInputOn  i_Manual_lights bInputOn  ForceChange ;
+: AutoLightOff   ( - ) i_switch bInputOff i_Manual_lights bInputOff ForceChange ;
 
 : AutoLight      ( - )
     i_Manual_lights  bInput@ 0=

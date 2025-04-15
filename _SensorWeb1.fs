@@ -41,7 +41,6 @@ s" Documents/MachineSettings.fs" file-status nip 0= [if]
             needs Documents/MachineSettings.fs    \ Optional, to load machine depended markers.
             [THEN]
 
-
 cr s" gpio -v"  ShGet nip        \ Is the wiringPi installed?
 [if]  needs wiringPi.fs          \ From: https://github.com/kristopherjohnson/wiringPi_gforth
       needs gpio.fs              \ To control and administer GPio pins
@@ -51,7 +50,6 @@ needs multiport_gate.f     \ To monitor and handle complex logical decisions
 
 \ Options depended on the activated marker
 [defined] AdminPage      [IF]  Needs Master.fs      [ELSE] needs slave.fs   [THEN]  \ Also loads the webserver
-[defined] CentralHeating [defined] Floorplan or     [IF] needs CentralHeating.fs    [ELSE] : OnStandby ;   [THEN]
 
 \  Input devices and sensors
 needs     Wifi_signal.fs       \ For WiFi signal strength
@@ -81,6 +79,7 @@ needs bsearch.f            \ For a quick search in a sorted file.
 needs svg_plotter.f        \ To plot simple charts for a web client.
 needs bme280-logger.fs     \ Contains the data definitions. It also logs non BME280 data
 needs bme280-output.fs     \ To format the output
+[defined] CentralHeating [defined] Floorplan or     [IF] needs CentralHeating.fs    [ELSE] : OnStandby ;   [THEN]
 
 \  Controls depended on sensors:
 [DEFINED] ControlLights [IF] needs LightControl.fs  [THEN]
@@ -88,9 +87,10 @@ needs bme280-output.fs     \ To format the output
 
 [defined] SitesIndexOpt [defined] AdminPage and \ Needs both on the master
       [IF]    needs sitelinks.fs
-              1 to #IndexSite   \ Change #IndexSite to your server-ID
-              cr cr .( The server-id for the index page is:)
+              1 to #IndexSite   \ #IndexSite is network wide! Change #IndexSite to your server-ID
+              cr cr .( NOTE: The server-id for the index page is set to:)
               #IndexSite dup .  .( IP:) ipAdress$ type
+              cr .( This system has server-ID:) FindOwnId .
 
               needs SitesIndex.fs \ A page with links to ControlLights and ControlWindow
       [THEN]
@@ -98,6 +98,7 @@ needs bme280-output.fs     \ To format the output
 needs graphics.fs          \ To plot historical data
 needs job_support.fs       \ For background tasks.
 needs schedule_daily.fs    \ Actions at a planned time.
+
 
 \ Options to see the complete received request:
 \ ' see-UDP-request  is udp-requests

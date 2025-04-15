@@ -109,11 +109,11 @@ FORTH DEFINITIONS ALSO HIDDEN
 \ : ftuck ( a b -- b a b )  fswap fover ;
 \ : f>s ( f -- n )  f>d d>s ;
 
-: time>mh ( f: h.m -- min hour )
+: time>mh ( f: h.m -- ) ( -- min hour )
 \ Convert a floating-point h.m time into integer minutes and hours.
   fdup floor  fover fswap  f-
 \  60e f*  f>s  >r floor  f>s r> swap ;   \ integrated stack Forth.
-  60e f*  f>s  floor  f>s ;              \ Separate fp stack.
+  60e f*  f>s  floor  f>s ;               \ Separate fp stack.
 
 \ { 3.5e time>mh -> 30 3 }
 

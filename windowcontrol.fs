@@ -1,7 +1,8 @@
-marker windowcontrol.f cr  .latest
-
+Common-extensions.f
 needs multiport_gate.f
 needs ldr.fs
+
+marker windowcontrol.fs cr   .latest
 
 \ -------------- Settings --------------
 
@@ -268,7 +269,8 @@ ALSO HTML
 
     <EndHtmlLayout> ;
 
- eval-wnd-net
+ eval-wnd-net drop
+
 \ -------------- Incomming --------------
 
 

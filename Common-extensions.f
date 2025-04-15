@@ -1,4 +1,4 @@
-Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 26-02-2025
+Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 14-04-2025
 
 : CloseFile ( fid - ) dup flush-file drop close-file drop ;
 
@@ -327,9 +327,8 @@ s" /sys/class/leds/led1/brightness" file-status nip \ led1 does not exist on a R
 
 variable exit-chain
 
-: bye ( -- )  exit-chain LogChainPerform ;
+: bye ( -- )   exit-chain LogChainPerform (bye  ;
 
- ' (bye         exit-chain chained
  ' kill-workers exit-chain chained
 
 [THEN]
@@ -388,7 +387,7 @@ Needs security.f
 
 synonym s>number?  (number?)
 synonym pause      winpause
-synonym .latest    noop
+\ synonym .latest    noop
 
 : s>number    ( adr count - d1 )  s>number? drop ;
 : Wall        ( msg$ count - ) type ; \ Perhaps not possible here.
@@ -396,8 +395,6 @@ synonym .latest    noop
 \in-system-ok : .latest ( - ) latestxt @ .name ;
 
 [THEN]
-
-needs Config.f           \ For saving data, variables and strings in a file
 
 0x1B constant escape
 
@@ -413,6 +410,13 @@ needs Config.f           \ For saving data, variables and strings in a file
     r/o open-file throw  dup>r
     read-file throw
     r> CloseFile  ;
+
+: extend-file   ( size hndl - )
+    dup>r file-size drop d>s +
+    s>d r@ resize-file abort" Can't extend file."
+    r> CloseFile ;
+
+needs Config.f           \ For saving data, variables and strings in a file
 
 
 : Start-logfile  ( name cnt - )

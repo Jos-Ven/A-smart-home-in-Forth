@@ -3,7 +3,7 @@ marker schedule_daily.fs  .latest \ Actions at a planned time.
 needs Common-extensions.f
 needs Sun.f
 needs table_sort.f
-needs schedule-tool.f
+needs schedule-tool.fs
 
 
 also html

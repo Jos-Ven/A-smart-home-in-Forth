@@ -1,12 +1,14 @@
-marker -schedule-tool.f  s" cforth" ENVIRONMENT?
-   [IF]   drop cr lastacf .name #19 to-column .( 02-02-2025 ) \ By J.v.d.Ven
-   [THEN]
+    needs TimeDiff.f
+    needs Sun.f
+    needs table_sort.f
+    needs Web-server-light.f
+
+Marker schedule-tool.fs .latest
 
 0 [if]
 
 NOTE: The local time should be right before running a schedule.
 New or changed entries are executed when they are scheduled in the future.
-Under Cforth schedule-tool.f can be flased into ROM.
 
 There are 2 tables in use.
 A schedule-table is linked to an options-table.
@@ -21,6 +23,7 @@ Pointers should be initialized by the application.
 [then]
 
 decimal
+
        0 value    &schedule-file    \ A pointer to the filename of the schedule table
 
 
@@ -107,8 +110,6 @@ defer schedule-entry  \ When repeating is needed
 : reset-schedule-entry ( - )  ['] noop is schedule-entry ;
 reset-schedule-entry
 
-S" gforth" ENVIRONMENT? [IF] 2drop \ No polling under gforth
-
 0 value TaskSchedule
 
 
@@ -168,149 +169,6 @@ s" cell 1 cells key: schedule-option schedule-option Ascending bin-sort" evaluat
                           start-schedule ;
 
 : restart-changed-schedule  ( mmhh-done - )  drop restart-schedule ;
-
-
-[ELSE]
-
-: inside-schedule? ( n - opt.record flag )
-    &schedule-table nt>record sched.record-->opt.record ;
-
-: execute-scheduled ( n - )
-    dup inside-schedule?
-      if    cr ." Schedule "
-            swap n>sched.time@  .mmhh
-            >opt.xt @ dup space >name$ type
-            execute
-      else  2drop
-      then ;
-
-: schedule ( - )
-    StopRunSchedule?
-      if time>mmhh #2359 >=
-          if    -1 scheduled !
-          else  scheduled @ 1+  dup &schedule-table >#records @  <
-                  if  dup n>sched.time@ time>mmhh  <=
-                         if  dup scheduled ! execute-scheduled
-                         else   drop \ outside schedule
-                         then
-                  else   drop  \ &schedule-table >#records @  exceeded
-                  then
-          then
-      then ;
-
-: kill-schedule ( - ) false to StopRunSchedule? ;
-
-
-: find-schedule-record ( mmhh-done - record# )  \ On a sorted schedule table
-   &schedule-table >#records @  swap  #2359 min \ The found time needs to be smaller or equal than #2359
-   &schedule-table >#records @  0
-      do  dup i n>sched.time@  <=                \ search as long as the mmhh-done is
-             if     drop i 1- -1 max swap leave \ Set the found entry to the previous entry
-             then
-      loop drop ;
-
-
-defer sort-schedule
-
-: init-schedule ( &schedule-file - ) \ The keys must be defined in RAM.
-   to &schedule-file /table init-table to &schedule-table
-   #2 &schedule-table >#records !
-   #2 cells &schedule-table >record-size !
-   s" 0 1 cells key: schedule-timer  schedule-timer  Ascending bin-sort" evaluate
-   s" cell 1 cells key: schedule-option schedule-option Ascending bin-sort" evaluate
-   s" : (sort-schedule) ( - ) by[ schedule-option schedule-timer ]by &schedule-table table-sort ;" evaluate
-   s" ' (sort-schedule) is sort-schedule" evaluate
-   extend-schedule ;
-
-: restart-schedule ( - )
-   sort-schedule time>mmhh find-schedule-record
-
-scheduled ! true to StopRunSchedule?  ;
-
-: restart-changed-schedule  ( mmhh-done - )
-   sort-schedule 1+ find-schedule-record  scheduled ! true to StopRunSchedule? ;
-
-create-timer: ttimer-WaitForsleeping
-1 value Sleep-till-sunset-option              \ The id for sleep-at-boot in &options-table
-
-
-: tTilEnd  ( ttimer - ) ( f: us-waittime - us )  cell+ f@ f+ usf@ f- ;
-
-: .msgTimeout ( - )
-    cr f# 30e6 ttimer-WaitForsleeping tTilEnd f# 1e-6 f* fround f>s .
-   ." seconds before deep-sleep."  ;
-
-\  ttimer-WaitForsleeping start-timer   .msgTimeout
-
-: .time-duration ( #seconds - )
-   #3600 /mod bl swap ##$ type
-   #60 /mod [char] : swap ##$ type
-   [char] : swap ##$ type ;
-
-: #seconds-deep-sleeping  ( #seconds - )
-   dup .time-duration
-   range-Gforth-servers 2@ -ArpRange #2000 ms
-   esp-wifi-stop spiffs-unmount 1 rtc-clk-cpu-freq-set #10 ms
-   cr ."  SLEEPING." 3 max  deep-sleep ;
-
-#60 #60 * value seconds-before-sunset
-
-: sleep-seconds-before-sunset        ( SecondsBeforeSunset - )
-    UtcSunSet  local-time-now  f- s>f f- fdup f0>
-       if    cr .date .time ."  Needed sleep " f>d drop  #seconds-deep-sleeping
-       else  fdrop cr .date .time ."  No sleep needed."
-             1 to WaitForSleeping-
-       then ;
-
-: ftime-till-next-second ( - )
-   usf@ fus>fsec fround fsec>fus  [ f# 1 fsec>fus ] fliteral us-to-deadline  ;
-
-: scheduled-wakeup ( - #seconds )
-   cr  .date .time ."  sleep-schedule deep-sleep time:"
-   next-scheduled-time #2359 min  UtcTill f>s
-   ftime-till-next-second fus ;
-
-: (sleeping-schedule) ( - )
-    next-scheduled-time #2359 min time>mmhh > GotTime? and
-      if WaitForSleeping- 0=
-           if    true to WaitForSleeping-  ttimer-WaitForsleeping start-timer
-           else  f# 30e6 ttimer-WaitForsleeping tElapsed?
-                   if    scheduled-wakeup  #seconds-deep-sleeping
-                   else  .msgTimeout
-                   then
-           then
-       then ;
-
-: schedule|sunset ( - )
-   next-scheduled-time #2359 >              \ No entries in schedule?
-     if    seconds-before-sunset sleep-seconds-before-sunset
-     else  (sleeping-schedule)              \ Follow schedule
-     then ;
-
-: (sleep-till-sunset) ( - )                   \ OR untill an upcomming entry in the schedule
-   WaitForSleeping- #1 <>                     \ skip when no sleep is needed
-     if UtcSunSet f0>                         \ will the sun set?
-          if  WaitForSleeping- 0=             \ Waiting / countdown not started?
-              if    true to WaitForSleeping-
-                    ttimer-WaitForsleeping start-timer
-              else  f# 30e6 ttimer-WaitForsleeping tElapsed?
-                       if  cr schedule|sunset
-                       else   .msgTimeout
-                       then
-              then
-          then
-     then ;
-
-: (sleep-at-boot)   ( - )
-   boot-time date-from-utc-time date>jjjjmmdd
-   local-time-now   date-from-utc-time date>jjjjmmdd =  \ Only today
-      if 0 n>sched.option@
-         Sleep-till-sunset-option = \ Is sleep-at-boot the FIRST entry in the schedule?
-           if  (sleep-till-sunset)
-           then
-       then ;
-
-[THEN]
 
 : (StopRunSchedule)   ( - )
      StopRunSchedule?
@@ -446,12 +304,7 @@ TCP/IP DEFINITIONS
       then ;
 
 : StopRunSchedule   ( - )  (StopRunSchedule)   ;
-
-
-S" cforth" ENVIRONMENT? [IF] DROP
-        : clr-req-buf ( -- )    req-buf /req-buf s" %3A" BlankString 2drop ;
-[ELSE]  : clr-req-buf ( -- )    req-buf lcount   s" %3A" BlankString 2drop ;
-[THEN]
+: clr-req-buf       ( -- ) req-buf lcount   s" %3A" BlankString 2drop ;
 
 FORTH DEFINITIONS
 

@@ -448,10 +448,6 @@ coded char - negate + dup 1 3  >floorItem ! 1 4  >floorItem !
         then
       r> +HTML| </svg> | 2drop fdrop ;
 
-: findDateTarget ( &date - #record )
-   >r &bme280-FileRecords @ #records @ r>
-   2@ record-size @ bsearch-doubles 2 pick - record-size @ / 1+ ;
-
 : find-date-interval  ( &records data-size - &records data-size #end #start ) ( f: interval )
    Startdate findDateTarget  >r
    Enddate  findDateTarget   r>
