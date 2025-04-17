@@ -15,10 +15,10 @@ Thanks to the added **multi port gates** you do not have to take any action to p
 The multi port gates also allows you to monitor what is going on.
 Of course you can override then if you like to.
 
-The Web-server-light runs best under Linux on a Raspberry Zero W.
+The Web-server-light runs best under Linux (Debian) on a Raspberry Zero W.
 A PC with Linux (Bookworm) or PC with Windows10/11 can also be used.
 
-Read the Installation guide for the details.
+Read the Installation guide for the used ports on your router and other details.
 Here is how a smart home may look under Linux when _SensorWeb1.fs is compiled with the option SitesIndexOpt active:
 
 ![01_ScreenShot](https://github.com/Jos-Ven/A-smart-home-in-Forth/assets/47664564/6e1347e7-d738-40e5-bccf-d34910833473)
