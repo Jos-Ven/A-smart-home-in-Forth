@@ -1,3 +1,7 @@
+s" favicon.ico" file-status nip 0<> [if] cr
+cr .( favicon.ico not found.)
+cr .( TRY: cdhdir sources_location   before starting Forth and compiling. )  quit [then]
+
 needs Common-extensions.f \ Basic tools for Gforth and Win32Forth
 Marker _demo1.f .latest   \ A minimal example for Win32Forth or a Raspberry Pi
 

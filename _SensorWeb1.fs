@@ -1,3 +1,7 @@
+s" favicon.ico" file-status nip 0<> [if] cr
+cr .( favicon.ico not found.)
+cr .( TRY: cd sources_location   before starting Forth and compiling. )  quit [then]
+
 needs Common-extensions.f  cr \ Basic tools for Gforth and Win32Forth.
 marker _SensorWeb1.fs .latest \ To support extra sensors and devices. By J.v.d.Ven. 04-06-2024
                               \ It needs Gforth on a Raspberry Pi with linux (Jessie or Bullseye)

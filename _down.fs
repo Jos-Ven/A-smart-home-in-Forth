@@ -1,3 +1,7 @@
+s" favicon.ico" file-status nip 0<> [if] cr
+cr .( favicon.ico not found.)
+cr .( TRY: cd sources_location   before starting Forth and compiling. )  quit [then]
+
 needs slave.fs             \ Will load all that is needed for the Web server light
 cr Marker _down.fs .latest \  1 page only.
 needs schedule_daily.fs

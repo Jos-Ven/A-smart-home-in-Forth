@@ -1,3 +1,7 @@
+s" favicon.ico" file-status nip 0<> [if] cr
+cr .( favicon.ico not found.)
+cr .( TRY: cd sources_location   before starting Forth and compiling. )  quit [then]
+
 needs Common-extensions.f \ See https://github.com/Jos-Ven/A-smart-home-in-Forth
 cr marker _UploadServer.f  bl emit .latest .( 11-06-2024 )      \ by J.v.d.Ven.
 

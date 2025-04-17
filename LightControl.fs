@@ -3,12 +3,14 @@ marker LightsControl.fs  .latest
 
 \ Commucicates over UDP / TCP with lightservers
 \ Change LightsOff and LightsOn for your situation.
+\ Activate from the home page in the schedule 'Reset sleep' to start a new cycle.
+\ Then the lights will then be put off when they are on. 04:00 sounds nice.
 \ The multi port gates allows you to see what is going on.
 
 \ -------------- Settings ---------------------------
 
       30  value MinutesBeforeSunSet   \ When to use an LDR to seen that it is getting dark
-  f# 2.1e fvalue ldr_lights_low        \ To trigger the lights
+  f# 2.1e fvalue ldr_lights_low       \ To trigger the lights
        4  value lights-#changes-max   \ No automates changes today when this has been reached.
 
 \ -------------- Switching --------------------------

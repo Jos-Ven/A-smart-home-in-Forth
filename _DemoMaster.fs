@@ -1,5 +1,8 @@
-needs Common-extensions.f
+s" favicon.ico" file-status nip 0<> [if] cr
+cr .( favicon.ico not found.)
+cr .( TRY: cd sources_location   before starting Forth and compiling. )  quit [then]
 
+needs Common-extensions.f
 Needs  Master.fs \ Will also load all the Web-server-light and autogen_ip_table.fs 16-07-2023
                  \ Change Max#servers first at the start of autogen_ip_table.fs !
 
