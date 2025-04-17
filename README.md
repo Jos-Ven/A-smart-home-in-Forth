@@ -11,9 +11,9 @@ The aims for the web-server-light are:
 2. Exchange data between servers.
 3. Keep all data local.
 
-Thanks to the added **multi port gates** you do not have to take any action to put on a number of lights or open a window. 
+Thanks to the added **multi port gates** you do not have to take any action to put on a number of lights or open a window.
 The multi port gates also allows you to monitor what is going on.
-Of course you can override then if you like to.
+Of course you can override them if you like to.
 
 The Web-server-light runs best under Linux (Debian) on a Raspberry Zero W.
 A PC with Linux (Bookworm) or PC with Windows10/11 can also be used.
