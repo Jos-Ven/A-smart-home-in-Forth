@@ -475,8 +475,12 @@ $e7e7e7 constant ButtonWhite
      r> LoadDataFile   +HTML| </pre>|
      <aHREF" +homelink +HTML| /home">| +HTML| Home| </a> ;
 
+
 : +hfile ( filename cnt - )
-   r/w bin open-file throw >r   htmlpage$ lcount +   r> LoadDataFile ;
+   2dup r/w bin open-file
+     if  drop cr bold type ."  <--- That file has not been found." norm cr 44 throw
+     then
+   >r htmlpage$ lcount + r> LoadDataFile  2drop ;
 
 : LoadHtmlFile ( title$ cnt filename cnt - )
    <yellow-page IncludeFile
