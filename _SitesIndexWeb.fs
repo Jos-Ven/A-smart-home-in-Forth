@@ -5,6 +5,19 @@ cr .( TRY: cd sources_location   before starting Forth and compiling. )  quit [t
 needs Common-extensions.f  cr    \ Basic tools for Gforth and Win32Forth.
 marker _SitesIndexWeb.fs .latest \ A framework for an index with SVG-pictograms. By J.v.d.Ven. 18-04-2025
                                  \ It needs Gforth on a Raspberry Pi with linux (Jessie or Bullseye)
+0 [if]
+This is a framework for your own extensions and svg-pictograms
+The dependicies of the RPI are removed.
+It should work under Linux Debian and the RPI.
+
+The idea is as follows:
+1) Create a new directory 'App' in your source directory
+2) Put SitesIndex.fs in it.
+3) Then cd source directory
+4) $ sudo gforth-itc
+5) needs _SitesIndexWeb.fs
+If it works then you can modify SitesIndex.fs to your own wishes.
+[then]
 
 cr .( Activated options:)
  MARKER AdminPage     .latest \ For a link to the AdministrationPage for multiple RPI's or multiple ESP32 systems
