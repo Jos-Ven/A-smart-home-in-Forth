@@ -1,15 +1,15 @@
 cr Marker SitesIndex.fs  .latest  \  Creates a master index
 \ You need to adapt this file for your sites.
 
-needs sitelinks.fs
-
-
 -1 value (pm25)  -1 value (Time_pm25)
 : +pm25 ( - )
    (Time_pm25) 100 /mod mh>mh$ +html
    +HTML|  pm2.5: |  (pm25) s>f 100e f/ (f.2) +html ;
 
+[defined] Bme280Sensor [if]
 : (+.Inside) ( - )    GetTemperature +HTML| Inside: |  (n.1) +html  +HTML| <br>&nbsp;| ;
+[else] : (+.Inside) ( - )  +HTML| Na <br>&nbsp;|  ;
+[then]
 
 defer (+.Outside) ' noop is (+.Outside)
 
@@ -92,7 +92,8 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
 : .SoundSystem ( - )
 \       File-SVG-pictogram                    Points to page    ServerId   link
         s" Home theater" <<td-legend>>
-           s" sound-system-svgrepo-com.svg" +hfile  s" /home"      0       svg-link
+          s" sound-system-svgrepo-com.svg" +hfile  s" /home"      0       svg-link
+\     s" App/sound-system-svgrepo-com.svg" +hfile  s" /home"      0       svg-link \ Case: own app
           <br>  ShowActivity$ count +HTML <br>  (PM25) 0>
                 if    +pm25
                 else  .HtmlSpace
@@ -224,10 +225,10 @@ NEEDS Documents/LinksSitesIndex.fs \ To load your own links for Links-first-row 
             s" https://github.com/Jos-Ven?tab=repositories" s" Git JV"            <<TopLink>> .HtmlSpace
             s" https://www.rosettacode.org/wiki/Category:Forth" s" Rosetta Forth" <<TopLink>> .HtmlSpace
             s" https://www.taygeta.com/fsl/sciforth.html"   s" SciForth"          <<TopLink>>
-         <br> +Arplink s" /UpdateLinksIndex"  Sitelinks
+         <br> +Arplink s" /UpdateLinksIndex"  Sitelinks  \ Takes time
          </td>
      +HTML| <td align="right" valign="bottom">|  .GforthDriven  </td> </tr> </table>
-    <EndHtmlLayout> ;
+    <EndHtmlLayout>  ;
 
 : SaveNote ( adr n -  )
     254 min DecodeHtmlInput dup 0>
