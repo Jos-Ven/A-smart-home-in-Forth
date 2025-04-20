@@ -12,7 +12,7 @@ It should work under Linux Debian and the RPI.
 
 The idea is as follows:
 1) Create a new directory 'App' in your source directory
-2) Put SitesIndex.fs in it.
+2) Put a copy of SitesIndex.fs in it.
 3) Then cd source directory
 4) $ sudo gforth-itc
 5) needs _SitesIndexWeb.fs
