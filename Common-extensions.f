@@ -1,4 +1,4 @@
-Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 14-04-2025
+Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 04-05-2025
 
 : CloseFile ( fid - ) dup flush-file drop close-file drop ;
 
@@ -464,6 +464,14 @@ needs Config.f           \ For saving data, variables and strings in a file
 : $find   ( str cnt -- str 0 | cfa flag )  upad place upad find ;
 
 : s>float ( adr cnt - flag ) ( - f )       bl scan- >float ;
+
+: replace-all-char-by ( adr len characterOLd characterNew -- )
+   swap >r -rot
+      begin  r@ scan dup 0<>   \ Character found?
+      while  >r 2dup c! r>     \ Replace the characterOld by characterNew
+             1 /string         \ Retry the remainder for adr' len'
+      repeat
+   r> 3drop drop ;
 
 : (u.r)  ( u w -- adr cnt )
     0 swap >r (d.) r> over - spaces$ upad place +upad"  ;

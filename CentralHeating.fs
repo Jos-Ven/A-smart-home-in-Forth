@@ -2,6 +2,8 @@ needs multiport_gate.f
 marker CentralHeating.fs .latest
 
 0 [if]
+It is intended to be used in cooperation with the an OpenTherm thermostat.
+
 14-04-2025    Now the Forth takes the warming up by the sun in account before switching
               the central system on. To update the input:
               1. Set the time with the button SetTimespan on page: Central heating
@@ -118,6 +120,7 @@ create TempCharFile ," TempChar.dat"
 : WriteGrabbed ( - ) &TempChar-Size TempCharFile count file-it ;
 : ReadGrabbed  ( - ) &TempChar-Size TempCharFile count @file drop ;
 
+
 TempCharFile count file-exist?
   [if]   ReadGrabbed
   [else] 0 GrabDate !
@@ -127,6 +130,13 @@ TempCharFile count file-exist?
  1230 69.2051284177007e0 3 >NeedsTempChar!
  1300 69.4829664224991e0 4 >NeedsTempChar!
   [then]
+
+: 0slope-temp  (  i/TempChar - )  ( f: - slope )
+    dup >TempChar >TcMinimal f@   /TempChar - >TempChar >TcMinimal f@    f/ ;
+
+
+: slope-temp  (  addr-TempChar - )  ( f: - slope )
+    dup  >TcMinimal f@   /TempChar -  >TcMinimal f@    f/ ;
 
 : grabchars ( - )
    MapBme280Data
@@ -146,9 +156,12 @@ TempCharFile count file-exist?
     if    false i_ch_ColdTrend bInput!
           >TcMinimal f@ f<
     else  dup  /TempChar - >TcTemperature f@
-          fover fswap
-          f/ f*  >TcMinimal f@ f<
+          fover f/ fdup dup slope-temp f<  \ Compare current slope of the temperature
+             if    drop fdrop fdrop false  \ with the slope of the temperature from grabbed records.
+             else  f* >TcMinimal f@ f<     \ Look at the expected temperature if the slope fails
+             then
     then ;
+
 
 : TCmeasure! ( >TempChar - flagCold ) ( f: TcTemp - )
     dup >TcTemperature f! TooCold? ;
@@ -158,7 +171,7 @@ TempCharFile count file-exist?
       do    i >TcTime @ WaitUntil
             fdBme280  Bme280>f fdrop fnip i TCmeasure!
             i &TempChar <> and
-                if leave then
+                if   leave   then
             /TempChar
       +loop   log" Exit." ;
 
@@ -237,8 +250,7 @@ ALSO HTML
    i_ch_Automatic@
       if    +HTML| Between | StartTimeOutTempLimit @ .html
             +HTML|  and | EndTimeOutTempLimit @ .html
-            +HTML|  the thermostat will execute its schedule.|
-            <br> +HTML| When no one is at home the thermostat should be in night mode.|
+            +HTML|  the thermostat will execute its schedule when all flags are set to 'Y'.|
       else  chNight \State
                 if     +HTML| The night mode is permanent.|
                 else   +HTML| The thermostat runs the central heating.|
@@ -358,7 +370,7 @@ ALSO HTML
      begin   web-server-sock
      while   ConditionsNightMode   WaitTillNextMinute
      repeat
-   cr  .date space .time ."  Bye JobNightService" (bye  ;
+   cr .date space .time ."  Bye JobNightService" (bye  ;
 
    i_ch_Mode bInputOff   i_ch_Manual bInputOn 0 SwitchNightservice
 

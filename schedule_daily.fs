@@ -30,6 +30,7 @@ also html
     if   RestartGforth  tid-http-server kill then    ;
 
 : Rebuild-arptable ( - )  ClearArpTable  true to RebuildArpTable-  ;
+: send-time-sync   ( - )  SendTCPTimesyncToAll ;
 
 here dup to &options-table \ Options used by run-schedule
 \                        Map: xt      cnt adr-string
@@ -38,6 +39,7 @@ here dup to &options-table \ Options used by run-schedule
    ' Rebuild-arptable        dup , >name$ , ,
    ' Reset-webserver_27th    dup , >name$ , ,
    ' Reset-sleep             dup , >name$ , ,
+   ' send-time-sync          dup , >name$ , ,
 
 here swap - /option-record / to #option-records
 create file-schedule-daily ," schedule-daily.dat"

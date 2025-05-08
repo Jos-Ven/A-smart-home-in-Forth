@@ -3,13 +3,15 @@ cr .( favicon.ico not found.)
 cr .( TRY: cd sources_location   before starting Forth and compiling. )  quit [then]
 
 needs Common-extensions.f \ See https://github.com/Jos-Ven/A-smart-home-in-Forth
-cr marker _UploadServer.f  bl emit .latest .( 11-06-2024 )      \ by J.v.d.Ven.
+cr marker _UploadServer.f  bl emit .latest .( 04-05-2024 )      \ by J.v.d.Ven.
 
 0 [IF]
 This makes it possible to upload sources to the file system of an ESP32 or ESP12F.
 For Installation, notes and known issues see:
 Installation_upload_server.pdf
 
+Update: 04-05-2024
+- Automated replacements for \ to / for Linux directories
 [THEN]
 
 needs FileLister.f        \ To select a file from a list. Also loads webcontrols.f and Web-server-light.f
@@ -208,7 +210,7 @@ TCP/IP DEFINITIONS ALSO HTML
 : SavExt	( <Extension> - )    parse-name  1 max 7 min Extension$ lplace ;
 
 : SetDir ( <htmlStyleDirName>- )
-   parse-name DecodeHtmlInput 2dup set-dir 0=
+   parse-name DecodeHtmlInput 2dup [char] \ [char] / replace-all-char-by 2dup set-dir 0=
      if    dir$ place NewListFiles
      else  2drop
      then  ;
