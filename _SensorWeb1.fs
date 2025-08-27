@@ -90,13 +90,16 @@ needs bme280-output.fs     \ To format the output
 [DEFINED] ControlWindow [IF] Needs windowcontrol.f  [THEN]
 
 [defined] SitesIndexOpt [defined] AdminPage and \ Needs both on the master
-      [IF]    needs sitelinks.fs
-              1 to #IndexSite   \ #IndexSite is network wide! Change #IndexSite to your server-ID
-              cr cr .( NOTE: The server-id for the index page is set to:)
-              #IndexSite dup .  .( IP:) ipAdress$ type
-              cr .( This system has server-ID:) FindOwnId .
-
-              needs SitesIndex.fs \ A page with links to ControlLights and ControlWindow
+      [IF]    needs sitelinks.fs      \ Contains the #IndexSite defined for the slaves.
+              cr cr .( NOTE: In sitelinks.fs the server-id for the index page for slaves is set to:)
+              #IndexSite dup .  cr .( The ip address for it is:) ipAdress$ type
+              FindOwnId to #IndexSite \ #IndexSite is network wide!
+              cr .( This system has server-ID:) FindOwnId dup .
+              cr .( It's ip address is:) ipAdress$ type
+              s" App/SitesIndex.fs" file-status nip [if]
+                     needs SitesIndex.fs                 \ A page with SVG pictograms.
+              [ELSE] needs App/MachineSettings.fs        \ Use your own page with SVG pictograms and
+              [THEN]
       [THEN]
 
 needs graphics.fs          \ To plot historical data

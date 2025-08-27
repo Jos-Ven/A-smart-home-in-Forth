@@ -29,7 +29,7 @@ ip_table$ count file-status nip 0<>
 \ \\\\\ The parameters to create an ip table for 20 servers are:
 
 55  constant Max#servers         \ When a range starts at x00.
-50  Max#servers min to #servers  \ MAXIMAL number of Raspberry servers and other servers
+52  Max#servers min to #servers  \ MAXIMAL number of Raspberry servers and other servers
 
 
 : FindIpStartRange ( - IpStartRange )
@@ -90,7 +90,7 @@ IpStartRange 10 + constant SecondIpRange  \ For other systems
   s" Esp"    80 #servers FirstIpRange  ModifyHosts \ ESP8266 servers modifing the names and IP-port
   s" Debian" 8080 9 9    ModifyHosts \ 1 other server  modifing the name  and IP-port
   s" Esp"    8899 14 12  ModifyHosts \ ESP8266 1 server modifing the name and IP-port
-\ s" Esp"    8899 16 16  ModifyHosts \ ESP8266 also not a webserver
+  s" Esp"    8899 51 51  ModifyHosts \ ESP8266 also not a webserver
 \ s" Esp"    16 r>HostName place \ patch name
 
 [ELSE]

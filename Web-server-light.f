@@ -1,4 +1,4 @@
-\ 14-04-2025 A web server by J.v.d.Ven.
+\ 27-08-2025 A web server by J.v.d.Ven.
 
 0 [IF]
 
@@ -50,6 +50,8 @@ Most important changes:
 
 14-04-2025    Now the Forth takes the warming up by the sun in account before switching
               the central system on. See the start of CentralHeating.fs for its usage.
+
+27-08-2025  - Some reorganisations. Also tested under real-time priority.
 [THEN]
 
 needs Common-extensions.f
