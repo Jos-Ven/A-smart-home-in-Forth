@@ -29,11 +29,10 @@ cd /home/pi
  fi
 
 echo submiting gForth  # Using one of the following lines:
-# sudo nice --10 nohup gforth _demo1.f        1>gf.log 2>&1 &
-# sudo nice --10 nohup gforth _UploadServer.f 1>gf.log 2>&1 &
- sudo nice --10 nohup gforth _DemoMaster.fs  1>gf.log 2>&1 &
-#  sudo nice --10 nohup gforth _SensorWeb1.fs 1>gf.log 2>&1 &
-
+# sudo chrt 50 nohup gforth _demo1.f        1>gf.log 2>&1 &
+# sudo chrt 50 nohup gforth _UploadServer.f 1>gf.log 2>&1 &
+  sudo chrt 50 nohup gforth _DemoMaster.fs  1>gf.log 2>&1 &
+# sudo chrt 50 nohup gforth _SensorWeb1.fs 1>gf.log 2>&1 &
 exit 0
 
 
