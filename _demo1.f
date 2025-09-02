@@ -61,7 +61,7 @@ ALSO HTML
 ALSO TCP/IP DEFINITIONS      \ All the actions are in the tcp/ip dictionary.
 
 : /home  ( - ) ['] home set-page ; \ So it will be executed after all other controls have been executed
-: Hello  ( - ) s" Hello!" place-last-html-cmd  cr s" Hello!" wall  ;
+: Hello  ( - ) s" Hello!" place-last-html-cmd ;
 
 forth definitions previous previous
 

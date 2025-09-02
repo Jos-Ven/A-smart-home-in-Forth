@@ -1,4 +1,4 @@
-\ 27-08-2025 A web server by J.v.d.Ven.
+\ 02-09-2025 A web server by J.v.d.Ven.
 
 0 [IF]
 
@@ -6,7 +6,7 @@ For small web-applications.
 Runs in windows under Win32Forth 6.15.04 or in Linux 8 or better under Gforth.
 Last tested under:
 - The Bullseye (Kernel: Linux 5.15.32+) on a Raspberry zero W
-- The bookworm (Kernel: Linux 6.1.0-9-amd64) on a PC
+- Trixie (Linux 6.12.41+deb13-amd64) on a PC
 - Windows 11
 
 Most important changes:
@@ -52,6 +52,8 @@ Most important changes:
               the central system on. See the start of CentralHeating.fs for its usage.
 
 27-08-2025  - Some reorganisations. Also tested under real-time priority.
+02-09-2025  - Updated for Trixie
+
 [THEN]
 
 needs Common-extensions.f
@@ -835,7 +837,7 @@ false value tid-http-server
      initWebServer
            1000 ms log" Web server at: " SetHomeLink homelink$ count 2dup +log
            ServerHost r>HostName count upad place space" +upad (time) +upad
-           s" : Webserver started at: " +upad  +upad s" /home" +upad" Wall
+           s" : Webserver started at: " +upad  +upad s" /home" +upad" start-txt
      [ [DEFINED] DisableLogging ]        [IF] Log" Disable logging" 0 to hlogfile [THEN]
      [ s" gforth" environment? ]         [IF] [ 2drop ] ['] noop is dobacktrace
        make-task dup to tid-http-server activate Starting-http-server  \ Background Gforth

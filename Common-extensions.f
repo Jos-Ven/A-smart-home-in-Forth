@@ -1,4 +1,4 @@
-Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 04-05-2025
+Marker Common-extensions.f \ For Gforth and Win32Forth. By J.v.d.Ven 02-09-2025
 
 : CloseFile ( fid - ) dup flush-file drop close-file drop ;
 
@@ -165,10 +165,6 @@ S" gforth" ENVIRONMENT? [IF] 2drop
 : bash ( -- ) s" bash" system ;
 
 : OsVersion" ( - adr cnt ) s" cat /etc/os-release | grep VERSION=" ShGet 1- ;
-
-: Wall ( msg$ count - ) \ Puts a msg on the terminal, even if it running in the background
-   s" echo '\a'" 2swap $concat 2drop
-   s" | sudo wall -n "  +upad  upad"  system ;
 
 \ Checking some used interfaces:
 : CheckSPI    ( - f )  s" lsmod | grep spi_" ShGet nip 0<> ;
@@ -388,9 +384,11 @@ Needs security.f
 synonym s>number?  (number?)
 synonym pause      winpause
 \ synonym .latest    noop
+synonym start-txt  type
 
 : s>number    ( adr count - d1 )  s>number? drop ;
-: Wall        ( msg$ count - ) type ; \ Perhaps not possible here.
+
+
 : drop_caches ( - )  ;
 \in-system-ok : .latest ( - ) latestxt @ .name ;
 
@@ -464,6 +462,13 @@ needs Config.f           \ For saving data, variables and strings in a file
 : $find   ( str cnt -- str 0 | cfa flag )  upad place upad find ;
 
 : s>float ( adr cnt - flag ) ( - f )       bl scan- >float ;
+
+S" gforth" ENVIRONMENT? [IF] 2drop
+
+: start-txt  ( msg$ count - ) \ Shows and send a txt msg to a waiting gf.sh
+  2dup type  s" /tmp/ipadr.txt" file-it ;
+
+[then]
 
 : replace-all-char-by ( adr len characterOLd characterNew -- )
    swap >r -rot

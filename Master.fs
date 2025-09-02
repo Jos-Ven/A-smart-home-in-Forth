@@ -363,8 +363,8 @@ TCP/IP DEFINITIONS \ Adding the requests to the tcp/ip dictionary
         else  IncreaseVersionFile  SentUpdateSignal#System     \ Send the update signal to 1 system
         then ;
 
-: UpdateAll                     ( - ) \ Also increases the version number
-   timer-reset IncreaseVersionFile
+: UpdateAll                     ( n - ) \ Also increases the version number
+   drop  timer-reset IncreaseVersionFile
    UpdateOption 6 =
      if     AllShutDownWarning
      else  ['] SubmitUpdate spawn ['] bye-page set-page

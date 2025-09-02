@@ -42,8 +42,8 @@ variable Reset-sleep-chain
 : RestartGforth ( - )
    cr .current-time&date ."  Restarting Gforth."
    log" Running the exit-chain. "
-   s" sudo ./gf.sh" system \ Must also kill gforth if still exist!
-   exit-chain chainperform ;
+   s" sudo ./auto.sh" system \ Must also kill gforth if still exist!
+   exit-chain chainperform (bye ;
 
 : RemoveNupdate.sh ( - )
   s" nupdate.sh" file-status nip not
